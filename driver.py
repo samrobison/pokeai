@@ -2,6 +2,7 @@ import time
 import re
 from selenium import webdriver
 from pokedex import Pokedex
+from movedex import MoveDex
 
 username = "botLife"
 password = "aiiscool"
