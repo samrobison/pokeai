@@ -1,7 +1,6 @@
 import time
 import re
 from selenium import webdriver
-from pokedex import Pokedex
 from movedex import MoveDex
 
 username = "botLife"
@@ -52,15 +51,19 @@ for chat in chats:
             print chat.text
             otherPokemon =  chat.text.splitlines()[1].split('/')
 
+enemyPokemon = []
 for p in otherPokemon:
-    p = p.encode('ascii', 'ignore')
-    p = p.lower()
-    p = p.replace(" ", "")
+    a = p.encode('ascii', 'ignore')
+    a = p.lower()
+    a = p.replace(" ", "")
+    enemyPokemon.append(a)
 
-print otherPokemon
+print enemyPokemon
 
 time.sleep(5)
+
 #clean up
 driver.find_element_by_name("closeRoom").click()
+time.sleep(1)
 driver.find_elements_by_tag_name("button")[0].click()
 driver.close()

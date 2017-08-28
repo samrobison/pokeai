@@ -1,3 +1,5 @@
+from pokedex import Pokedex
+
 class Pokemon:
 
     moves = []
@@ -5,7 +7,8 @@ class Pokemon:
     item = ''
 
     def __init__(self, name):
-        print "hi"
+        pokemon = Pokedex[name]
+        self.data = calcMaxStats(pokemon[baseStats])
 
 
 
