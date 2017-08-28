@@ -1,0 +1,25 @@
+=== [gen71v1] Untitled 1 ===
+
+Swampert @ Rindo Berry
+Ability: Torrent
+EVs: 252 HP / 108 Atk / 84 Def / 64 SpD
+- Counter
+- Mirror Coat
+- Earthquake
+- Protect
+
+Machamp  
+Ability: No Guard
+EVs: 244 HP / 252 Atk / 12 SpD
+- Dynamic Punch
+- Payback
+- Bullet Punch
+- Ice Punch
+
+Porygon-Z @ Assault Vest
+Ability: Adaptability
+EVs: 4 HP / 252 SpA / 252 Spe
+- Dark Pulse
+- Hyper Beam
+- Ice Beam
+- Thunderbolt
