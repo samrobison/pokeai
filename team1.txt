@@ -1,25 +1,28 @@
-=== [gen71v1] Untitled 1 ===
+=== [gen71v1] Untitled 6 ===
 
-Swampert @ Rindo Berry
-Ability: Torrent
-EVs: 252 HP / 108 Atk / 84 Def / 64 SpD
-- Counter
-- Mirror Coat
+Golem @ Groundium Z
+Ability: Sturdy
+EVs: 252 Atk / 4 SpD / 252 Spe
+Adamant Nature
+- Sucker Punch
 - Earthquake
-- Protect
+- Rock Tomb
+- Incinerate
 
-Machamp  
-Ability: No Guard
-EVs: 244 HP / 252 Atk / 12 SpD
-- Dynamic Punch
-- Payback
-- Bullet Punch
-- Ice Punch
+Bewear @ Choice Band
+Ability: Fluffy
+EVs: 248 HP / 216 Atk / 44 Def or 248 HP / 200 Atk / 60 Def
+Adamant Nature
+- Giga Impact
+- Hammer Arm
+- Earthquake
+- Thunder Punch
 
-Porygon-Z @ Assault Vest
-Ability: Adaptability
-EVs: 4 HP / 252 SpA / 252 Spe
-- Dark Pulse
-- Hyper Beam
-- Ice Beam
-- Thunderbolt
+Kyurem-Black @ Icium Z
+Ability: Teravolt
+EVs: 252 HP / 52 Atk / 156 Def / 44 SpD / 4 Spe
+Adamant Nature
+- Freeze Shock
+- Outrage
+- Substitute
+- Fusion Bolt

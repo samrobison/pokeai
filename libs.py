@@ -4,7 +4,7 @@ def damge(pokeDataYours, pokeDataEnemies, moveData, ownership, currentHP):
     minDamage = 0
     maxDamage = 0
     probability = 0.0
-    
+
     if ownership == False:
         #find out whether STAB or not
         stab = 1.0
@@ -13,24 +13,24 @@ def damge(pokeDataYours, pokeDataEnemies, moveData, ownership, currentHP):
 
         #find type effectiveness modifier
         effective = TypeChart[moveData.pokeType][pokeDataEnemies.pokeType[0]] * TypeChart[moveData.pokeType][pokeDataEnemies.pokeType[1]]
-        
+
         #find damage before min max multiplier
         damage = 0
-        if moveData.physical == true
-            damage = int((int((42 * moveData.power * int(pokeDataYours.stats['atk'] / pokeDataEnemies.maxStats['defe'])) / 50) + 2) * stab * effective)
-        else
-            damage = int((int((42 * moveData.power * int(pokeDataYours.stats['spa'] / pokeDataEnemies.maxStats['spd'])) / 50) + 2) * stab * effective)
+        if moveData.physical == True:
+            damage = int( ( int( (42 * moveData.power * int(pokeDataYours.stats()['atk'] / pokeDataEnemies.maxStats()['defe'])) / 50) + 2) * stab * effective)
+        else:
+            damage = int( ( int( (42 * moveData.power * int(pokeDataYours.stats()['spa'] / pokeDataEnemies.maxStats()['spd'])) / 50) + 2) * stab * effective)
         minDamage = int(damage * MIN_MULT)
         maxDamage = int(damage * MAX_MULT)
     else:
         print 'meanie'
 
     #find probanility of the move killing
-    if currentHP > maxDamage
+    if currentHP > maxDamage:
         probability = 0.0
-    else if currentHP <= minDamage
+    elif currentHP <= minDamage:
         probability = 1.0
-    else
+    else:
         probability = float(currentHP - minDamage)/(maxDamage - minDamage)
 
     return (minDamage, maxDamage, probability)

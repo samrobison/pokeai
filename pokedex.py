@@ -10250,7 +10250,7 @@ Pokedex = {
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
 	},
-	'genesect': {
+	'genesect*': {
 		'num': 649,
 		'species': "Genesect",
 		'types': ["Bug", "Steel"],
