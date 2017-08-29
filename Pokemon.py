@@ -5,14 +5,15 @@ class Pokemon:
     ### Data ###
     moves = []
     data = {}
+    pokeType = ()
     item = ''
     friendly = True
 
     ### Methods ###
     def __init__(self, name, mine):
         pokemon = Pokedex[name]
-        self.data = pokemon[baseStats]
-        currentHp = calcMaxStats(self.data)['hp']
+        self.data = pokemon['baseStats']
+        self.pokeType = pokemon['types']
         self.friendly = mine
 
     def setStats(stats):
@@ -34,12 +35,12 @@ class Move:
     ### Data ###
     physical = False
     power = 0
-    types = []
+    pokeType = ''
     accuracy = 0
 
     ### Methods ###
     def __init__(self, damageType, powe, ts, acc):
         self.physical = damageType
         self.power = powe
-        self.types = ts
+        self.pokeType = ts
         self.accuracy = acc
