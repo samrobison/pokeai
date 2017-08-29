@@ -2,13 +2,24 @@ from pokedex import Pokedex
 
 class Pokemon:
 
+    ### Data ###
     moves = []
     data = {}
     item = ''
+    friendly = True
 
-    def __init__(self, name):
+    ### Methods ###
+    def __init__(self, name, mine):
         pokemon = Pokedex[name]
         self.data = pokemon[baseStats]
+        currentHp = calcMaxStats(self.data)['hp']
+        self.friendly = mine
+
+    def setStats(stats):
+        self.data = stats
+
+    def stats():
+        return data
 
     def maxStats():
         return calcMaxStats(self.data)
@@ -20,11 +31,13 @@ class Pokemon:
 
 class Move:
 
+    ### Data ###
     physical = False
     power = 0
     types = []
     accuracy = 0
 
+    ### Methods ###
     def __init__(self, damageType, powe, ts, acc):
         self.physical = damageType
         self.power = powe
