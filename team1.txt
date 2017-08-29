@@ -1,13 +1,13 @@
 === [gen71v1] Untitled 6 ===
 
-Golem @ Groundium Z
-Ability: Sturdy
-EVs: 252 Atk / 4 SpD / 252 Spe
-Adamant Nature
-- Sucker Punch
-- Earthquake
-- Rock Tomb
-- Incinerate
+Porygon-Z @ Normalium Z
+Ability: Adaptability
+EVs: 252 HP / 56 Def / 200 SpA
+Modest Nature
+- Thunderbolt
+- Conversion
+- Hyper Beam
+- Ice Beam
 
 Bewear @ Choice Band
 Ability: Fluffy

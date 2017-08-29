@@ -35,10 +35,7 @@ move1 = team.splitlines()[6].replace(" ", "").replace("-", "").lower()
 move2 = team.splitlines()[7].replace(" ", "").replace("-", "").lower()
 move3 = team.splitlines()[8].replace(" ", "").replace("-", "").lower()
 move4 = team.splitlines()[9].replace(" ", "").replace("-", "").lower()
-MoveDex[move1]['name'] = move1
-MoveDex[move2]['name'] = move2
-MoveDex[move3]['name'] = move3
-MoveDex[move4]['name'] = move4
+
 
 moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
 myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats))
@@ -57,10 +54,7 @@ move1 = team.splitlines()[15].replace(" ", "").replace("-", "").lower()
 move2 = team.splitlines()[16].replace(" ", "").replace("-", "").lower()
 move3 = team.splitlines()[17].replace(" ", "").replace("-", "").lower()
 move4 = team.splitlines()[18].replace(" ", "").replace("-", "").lower()
-MoveDex[move1]['name'] = move1
-MoveDex[move2]['name'] = move2
-MoveDex[move3]['name'] = move3
-MoveDex[move4]['name'] = move4
+
 moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
 myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats))
 
@@ -78,10 +72,7 @@ move1 = team.splitlines()[24].replace(" ", "").replace("-", "").lower()
 move2 = team.splitlines()[25].replace(" ", "").replace("-", "").lower()
 move3 = team.splitlines()[26].replace(" ", "").replace("-", "").lower()
 move4 = team.splitlines()[27].replace(" ", "").replace("-", "").lower()
-MoveDex[move1]['name'] = move1
-MoveDex[move2]['name'] = move2
-MoveDex[move3]['name'] = move3
-MoveDex[move4]['name'] = move4
+
 moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
 myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats))
 
@@ -136,16 +127,42 @@ print choice
 #select pokemon
 buttons = driver.find_element_by_class_name("switchmenu").find_elements_by_tag_name("button")
 for button in buttons:
-    if button.text.lower().replace(" ", "").replace("-", "") == choice[0]:
+    buttonName = button.text.lower().replace(" ", "").replace("-", "")
+    if buttonName in choice[0] or choice[0] in buttonName:
         button.click()
+        break
 
+#see what they picked
+while len( driver.find_elements_by_class_name('battle-history') ) == 0:
+    print "waiting"
+    time.sleep(1)
+time.sleep(2)
+theirPick = ""
+for element in driver.find_elements_by_class_name('battle-history'):
+    if "sent out" in element.text:
+        element.text
+        theirPick = element.text.split('out')[1].replace(" ", "").replace("-", "").replace("!", "").lower()
+        if "(" in theirPick:
+            theirPick = theirPick.split("(")[1].replace(")", "")
+
+        print theirPick
+#theirPick = driver.find_elements_by_class_name('battle-history')[1].text.split('out')[1].replace(" ", "").replace("-", "").lower()
+tree.findRootOfPicked(choice[0], theirPick)
 #loop
+choice = tree.shortestPath(tree.currentNode)
+print choice
+
+#choose movedex
+while  len(driver.find_elements_by_class_name("movecontrols")) == 0:
+    time.sleep(1)
+buttons = driver.find_element_by_class_name("movecontrols").find_elements_by_tag_name("button")
+
+for move in buttons:
+    if choice[1] in move.text or move.text in choice[1]:
+        move.click()
+        break
 
 #end
-time.sleep(5)
+time.sleep(70)
 
-#clean up
-driver.find_element_by_name("closeRoom").click()
-time.sleep(1)
-driver.find_elements_by_tag_name("button")[0].click()
 driver.close()

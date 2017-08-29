@@ -16,7 +16,7 @@ class Move:
         self.power = powe
         self.pokeType = ts
         self.accuracy = acc
-        self.name
+        self.name = na
 
 class Pokemon:
 

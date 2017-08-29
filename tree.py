@@ -38,15 +38,16 @@ class Node:
                 self.theirPokemon = self.parent.theirPokemon
                 self.myHp = self.parent.myHp - damageToMe
                 self.theirHp = self.parent.theirHp - damageToThem
-                self.myMove = myMo
+                self.myMove = myMo.name
                 self.theirMove = theirMo
-                if (self.myHp == 0 or self.theirHp == 0):
+                if (self.myHp <= 0 or self.theirHp <= 0):
                     self.endNode = True
+                    # print "endnode "+ self.myPokemon.name + " " + self.theirPokemon.name
             else:
                 self.myPokemon = poke1
                 self.theirPokemon = poke2
                 self.myHp = self.myPokemon.data['hp']
-                self.theirHp = self.theirPokemon.data['hp']
+                self.theirHp = calcMaxStats(self.theirPokemon.data)['hp']
 
     def addChild(self, node):
         self.children.append(node)
@@ -67,33 +68,40 @@ class Tree:
             for theirMon in theirPokeSet:
                 newNode = Node(poke1=myMon, poke2=theirMon, par=self.rootNode)
                 self.rootNode.addChild(newNode)
-                self.fillPath(newNode)
+                self.fillPath(newNode, 0)
 
-    def fillPath(self, node):
-        if node.endNode == False and node.theirHp > 0:
+    def fillPath(self, node, depth):
+        if node.endNode == False and depth < 5:
             for move in node.myPokemon.moves:
                 damage = damge(node.myPokemon, node.theirPokemon, move, False, node.theirHp)
                 dam = damage[0]
                 if dam > 0:
                     newNode = Node(damageToMe=0, damageToThem=dam, par=node, myMo=move)
-                    print node.myPokemon.name +" "+ node.theirPokemon.name+" "+str(node.theirHp)+" "+move.name
+                    #  node.myPokemon.name +" "+ node.theirPokemon.name+" "+str(node.theirHp)+" "+move.name
                     node.addChild(newNode)
-                    self.fillPath(newNode)
+                    self.fillPath(newNode, depth + 1)
 
     def getMoveUsed(self, startNode, endNode):
         tmpNode = endNode
-        while startNode != tmpNode.parent :
+        while startNode != tmpNode.parent:
             tmpNode = tmpNode.parent
         return tmpNode.myMove
 
+    def findRootOfPicked(self, mine, theirs):
+        for state in self.rootNode.children:
+            print mine + " " + theirs
+            if state.myPokemon.name == mine and state.theirPokemon.name == theirs:
+                self.currentNode = state
+                return state
 
     def shortestPath(self, startNode):
         stack = []
         index = -1
         currentNode = startNode
-
         while currentNode.endNode == False:
             stack = stack + currentNode.children
-            index += 1
             currentNode = stack[index]
+            index += 1
+            if index >= len(stack):
+                break
         return(currentNode.myPokemon.name, self.getMoveUsed(startNode, currentNode))
