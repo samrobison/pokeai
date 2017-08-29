@@ -53,10 +53,10 @@ for chat in chats:
 
 enemyPokemon = []
 for p in otherPokemon:
-    a = p.encode('ascii', 'ignore')
-    a = p.lower()
-    a = p.replace(" ", "")
-    enemyPokemon.append(a)
+    name = p.encode('ascii', 'ignore')
+    name = p.lower()
+    name = p.replace(" ", "")
+    enemyPokemon.append(Pokemon(name))
 
 print enemyPokemon
 
