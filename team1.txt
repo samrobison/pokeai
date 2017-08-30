@@ -1,28 +1,28 @@
 === [gen71v1] Untitled 6 ===
 
-Porygon-Z @ Normalium Z
+Porygon-Z @ Choice Scarf
 Ability: Adaptability
-EVs: 252 HP / 56 Def / 200 SpA
+EVs: 252 SpA / 252 Spe
 Modest Nature
 - Thunderbolt
-- Conversion
+- Dark Pulse
 - Hyper Beam
 - Ice Beam
 
 Bewear @ Choice Band
 Ability: Fluffy
-EVs: 248 HP / 216 Atk / 44 Def or 248 HP / 200 Atk / 60 Def
+EVs: 248 HP / 200 Atk / 60 Def
 Adamant Nature
 - Giga Impact
 - Hammer Arm
 - Earthquake
 - Thunder Punch
 
-Kyurem-Black @ Icium Z
-Ability: Teravolt
-EVs: 252 HP / 52 Atk / 156 Def / 44 SpD / 4 Spe
+Tapu Bulu @ Choice Scarf
+Ability: Grassy Surge
+EVs: 4 HP / 252 Atk / 252 Spe
 Adamant Nature
-- Freeze Shock
-- Outrage
-- Substitute
-- Fusion Bolt
+- Wood Hammer
+- Superpower
+- Stone Edge
+- Megahorn

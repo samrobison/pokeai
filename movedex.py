@@ -2508,7 +2508,7 @@ MoveDex = {
 		'zMoveBoost': {'accuracy': 1},
 		'contestType': "Cute",
 	},
-	"'def'og": {
+	"defog": {
 		'num': 432,
 		'accuracy': True,
 		'basePower': 0,

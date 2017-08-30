@@ -11,21 +11,14 @@ class Node:
     theirHp = 0
     endNode = False
     probablilty = 1
-    myMove = ""
-    theirMove = ""
+    myMove = None
+    theirMove = None
+    myItem = ""
+    theirItem = ""
+    myStatus = ""
+    theirStatus = ""
+    seeded = False
     ### Methods ###
-
-    # #for initial creation
-    # def __init__():
-    #     print "created"
-    #
-    # #for when 2 pokemon are chosen for the first time
-    # def __init__(self, poke1, poke2, par):
-    #     self.myPokemon = poke1
-    #     self.theirPokemon = poke2
-    #     self.myHp = self.myPokemon.stats()['hp']
-    #     self.theirHp = self.theirPokemon.calcMaxStats( theirPokemon.stats() )
-    #     self.parent = par
 
     # for after moves that pokemon do
     def __init__(self, par=None, damageToMe=None, damageToThem=None, poke1=None, poke2=None, myMo=None, theirMo=None):
@@ -38,8 +31,9 @@ class Node:
                 self.theirPokemon = self.parent.theirPokemon
                 self.myHp = self.parent.myHp - damageToMe
                 self.theirHp = self.parent.theirHp - damageToThem
-                self.myMove = myMo.name
+                self.myMove = myMo
                 self.theirMove = theirMo
+                self.myItem = self.parent.myItem
                 if (self.myHp <= 0 or self.theirHp <= 0):
                     self.endNode = True
                     # print "endnode "+ self.myPokemon.name + " " + self.theirPokemon.name
@@ -48,9 +42,20 @@ class Node:
                 self.theirPokemon = poke2
                 self.myHp = self.myPokemon.data['hp']
                 self.theirHp = calcMaxStats(self.theirPokemon.data)['hp']
+                self.myItem = poke1.item
 
     def addChild(self, node):
         self.children.append(node)
+
+    def isBattleRoot(self):
+        if not self.isTreeRoot() and self.myPokemon != None and self.theirPokemon != None and self.myMove == None: #and self.theirMove == None:
+            return True
+        return False
+
+    def isTreeRoot(self):
+        if self.parent == None:
+            return True
+        return False
 
 class Tree:
 
@@ -70,22 +75,43 @@ class Tree:
                 self.rootNode.addChild(newNode)
                 self.fillPath(newNode, 0)
 
+
     def fillPath(self, node, depth):
         if node.endNode == False and depth < 5:
-            for move in node.myPokemon.moves:
+            moves = node.myPokemon.moves
+            #lock to single move if both pokemon have been selected a move has been used and the item is locking
+            notRoot = not node.isTreeRoot
+            lockinItem = node.myPokemon.moveLockingItem
+            
+            if (not node.isTreeRoot
+            and node.myPokemon.moveLockingItem
+            and node.item != None
+            and not node.isBattleRoot() ):
+            # and not node.parent.isBattleRoot()) :
+                moves = [node.parent.myMove]
+                print "alsdjflaks;jfals;"
+            for move in moves:
                 damage = damge(node.myPokemon, node.theirPokemon, move, False, node.theirHp)
                 dam = damage[0]
                 if dam > 0:
                     newNode = Node(damageToMe=0, damageToThem=dam, par=node, myMo=move)
-                    #  node.myPokemon.name +" "+ node.theirPokemon.name+" "+str(node.theirHp)+" "+move.name
+                    # print node.myPokemon.name +" "+ node.theirPokemon.name+" "+str(dam)+" "+move.name
                     node.addChild(newNode)
                     self.fillPath(newNode, depth + 1)
 
     def getMoveUsed(self, startNode, endNode):
         tmpNode = endNode
+        print "getmoveused: "+tmpNode.myMove.name
         while startNode != tmpNode.parent:
             tmpNode = tmpNode.parent
-        return tmpNode.myMove
+            if tmpNode.myMove != None:
+                print "getmoveused: "+tmpNode.myMove.name
+            else:
+                print "getmoveused: "
+        if tmpNode.myMove != None:
+            return tmpNode.myMove.name
+        else:
+            return ""
 
     def findRootOfPicked(self, mine, theirs):
         for state in self.rootNode.children:
@@ -94,14 +120,21 @@ class Tree:
                 self.currentNode = state
                 return state
 
+    def findNextState(self):
+        self.currentNode = self.currentNode.children[0]
+        return (self.currentNode.myPokemon.name, self.currentNode.myMove.name)
+
     def shortestPath(self, startNode):
         stack = []
         index = -1
-        currentNode = startNode
-        while currentNode.endNode == False:
-            stack = stack + currentNode.children
-            currentNode = stack[index]
+        activeNode = startNode
+        while activeNode.endNode == False:
+            stack = stack + activeNode.children
             index += 1
+            activeNode = stack[index]
+            # print str(index) + " " + str(len(stack)) + " " + activeNode.myMove.name +  " " +str(activeNode.theirHp)
+
+
             if index >= len(stack):
                 break
-        return(currentNode.myPokemon.name, self.getMoveUsed(startNode, currentNode))
+        return (activeNode.myPokemon.name, self.getMoveUsed(startNode, activeNode))

@@ -32,7 +32,6 @@ def damge(pokeDataYours, pokeDataEnemies, moveData, ownership, currentHP):
         probability = 1.0
     else:
         probability = float(currentHP - minDamage)/(maxDamage - minDamage)
-
     return (minDamage, maxDamage, probability)
 
 #def accuracy(stuff):
