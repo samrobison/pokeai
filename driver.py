@@ -127,7 +127,7 @@ for p in otherPokemon:
 
 tree = Tree(myPokemon, enemyPokemon)
 
-choice =  tree.shortestPath(tree.rootNode)
+choice =  tree.findNextState()
 print choice
 #select pokemon
 buttons = driver.find_element_by_class_name("switchmenu").find_elements_by_tag_name("button")
@@ -161,7 +161,7 @@ for element in driver.find_elements_by_class_name('battle-history'):
 tree.findRootOfPicked(choice[0], theirPick)
 
 #loop
-choice = tree.shortestPath(tree.currentNode)
+choice = tree.findNextState()
 print choice
 
 turn = 1

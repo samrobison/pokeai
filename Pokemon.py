@@ -2,47 +2,56 @@ from pokedex import Pokedex
 from libs import *
 
 class Move:
-
-    ### Data ###
-    physical = False
-    power = 0
-    pokeType = ''
-    accuracy = 0
-    name = ""
-    zPower = None
-    pp = 0
-    boosts = []
-    recharge = False
+    def nullInit(self):
+        ### Data ###
+        self.category = False
+        self.power = 0
+        self.pokeType = ''
+        self.accuracy = 100
+        self.name = ""
+        self.zPower = None
+        self.pp = 0
+        self.boosts = []
+        self.recharge = False
+        self.stallingMove = False
 
     ### Methods ###
     def __init__(self, moveHash):
-        self.physical = moveHash['category']  == 'Physical'
-        self.power = moveHash['basePower']
-        self.pokeType = moveHash['type']
-        self.accuracy = moveHash['accuracy']
-        self.name = moveHash['name']
-        if 'zMovePower' in moveHash:
-            self.zPower = moveHash['zMovePower']
-        self.pp = moveHash['pp']
-        self.priority = moveHash['priority']
-        if 'boosts' in moveHash:
-            self.boosts = moveHash['boosts']
+        self.nullInit()
+        if moveHash != None:
+            self.power = moveHash['basePower']
+            self.pokeType = moveHash['type']
+            self.accuracy = moveHash['accuracy']
+            self.name = moveHash['name']
+            self.category = moveHash['category']
+            self.stallingMove = 'stallingMove' in moveHash
+            if 'zMovePower' in moveHash:
+                self.zPower = moveHash['zMovePower']
+            self.pp = moveHash['pp']
+            self.priority = moveHash['priority']
+            if 'boosts' in moveHash:
+                self.boosts = moveHash['boosts']
 
 class Pokemon:
 
-    ### Data ###
-    moves = []
-    data = {}
-    pokeType = ()
-    item = ""
-    moveLockingItem = False
-    friendly = True
-    ability = ""
-    name = ""
-    otherForms = []
+    def nullInit(self):
+        ### Data ###
+        self.moves = []
+        self.data = {}
+        self.stats = {}
+        self.pokeType = ()
+        self.item = ""
+        self.moveLocked = False
+        self.friendly = True
+        self.ability = ""
+        self.name = ""
+        self.otherForms = []
+        self.item = ""
+
 
     ### Methods ###
     def __init__(self, name, abil=None, moves=None, stat=None, itemHeld=None):
+        self.nullInit()
         pokemon = Pokedex[name]
         self.name = name
         self.data = pokemon['baseStats']
@@ -55,22 +64,27 @@ class Pokemon:
         else:
             self.pokeType = (pokemon['types'][0], pokemon['types'][1])
 
-        if abil != None:
-            self.moves = []
+        if moves != None:
             for move in moves:
                 self.moves.append( Move( move ) )
             self. ability = abil
             self.friendly = False
-            self.calcStats(stat)
+            self.stats = self.calcStats(stat)
             self.item = itemHeld
-            self.moveLockingItem = False
-            self.calcStats(stat)
+            self.movedLockingItem = False
+        else:
+            #get possible moves when availble
+            self.stats = self.maxStats()
+            self.moves.append( Move(None) )
 
     def setStats(self, stats):
         self.data = stats
 
+    def getStat(self, stat):
+        return self.stats[stat]
+
     def stats(self):
-        return self.data
+        return self.stats
 
     def calcStats(self, stats):
         newData = {}
@@ -88,15 +102,15 @@ class Pokemon:
         #add Choice boosts
         if "Choice Scarf" in self.item:
             newData['spe'] *= 1.5
-            self.moveLockingItem = True
+            self.movedLocked = True
         if "Choice Band" in self.item:
             newData['atk'] *= 1.5
-            self.moveLockingItem = True
+            self.movedLocked = True
         if "Choice Specs" in self.item:
             newData['spa'] *= 1.5
-            self.moveLockingItem = True
+            self.movedLocked = True
         #set modified stats
-        self.data = newData
+        return newData
 
     def maxStats(self):
         return calcMaxStats(self.data)

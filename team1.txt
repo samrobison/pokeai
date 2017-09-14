@@ -9,14 +9,14 @@ Modest Nature
 - Hyper Beam
 - Ice Beam
 
-Bewear @ Choice Band
-Ability: Fluffy
-EVs: 248 HP / 200 Atk / 60 Def
-Adamant Nature
-- Giga Impact
-- Hammer Arm
-- Earthquake
-- Thunder Punch
+Celesteela @ Leftovers
+Ability: Beast Boost
+EVs: 252 HP / 4 Def / 252 SpD
+Careful Nature
+- Leech Seed
+- Protect
+- Toxic
+- Iron Head  
 
 Tapu Bulu @ Choice Scarf
 Ability: Grassy Surge

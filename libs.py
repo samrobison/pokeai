@@ -1,29 +1,26 @@
-def damge(pokeDataYours, pokeDataEnemies, moveData, ownership, currentHP):
+def calcDamge(poke1, poke2, moveData, currentHP):
     MIN_MULT = 0.85
     MAX_MULT = 1.0
     minDamage = 0
     maxDamage = 0
     probability = 0.0
 
-    if ownership == False:
-        #find out whether STAB or not
-        stab = 1.0
-        if (pokeDataYours.pokeType[0] == moveData.pokeType) or (pokeDataYours.pokeType[1] == moveData.pokeType):
-            stab = 1.5
+    #find out whether STAB or not
+    stab = 1.0
+    if (poke1.pokeType[0] == moveData.pokeType) or (poke1.pokeType[1] == moveData.pokeType):
+        stab = 1.5
 
-        #find type effectiveness modifier
-        effective = TypeChart[moveData.pokeType][pokeDataEnemies.pokeType[0]] * TypeChart[moveData.pokeType][pokeDataEnemies.pokeType[1]]
+    #find type effectiveness modifier
+    effective = TypeChart[moveData.pokeType][poke2.pokeType[0]] * TypeChart[moveData.pokeType][poke2.pokeType[1]]
 
-        #find damage before min max multiplier
-        damage = 0
-        if moveData.physical == True:
-            damage = int( ( int( (42 * moveData.power * int(pokeDataYours.stats()['atk'] / pokeDataEnemies.maxStats()['defe'])) / 50) + 2) * stab * effective)
-        else:
-            damage = int( ( int( (42 * moveData.power * int(pokeDataYours.stats()['spa'] / pokeDataEnemies.maxStats()['spd'])) / 50) + 2) * stab * effective)
-        minDamage = int(damage * MIN_MULT)
-        maxDamage = int(damage * MAX_MULT)
-    else:
-        print 'meanie'
+    #find damage before min max multiplier
+    damage = 0
+    if moveData.category == 'Physical':
+        damage = int( ( int( (42 * moveData.power * int(poke1.stats()['atk'] / poke2.maxStats()['defe'])) / 50) + 2) * stab * effective)
+    elif moveData.category == 'special':
+        damage = int( ( int( (42 * moveData.power * int(poke1.stats()['spa'] / poke2.maxStats()['spd'])) / 50) + 2) * stab * effective)
+    minDamage = int(damage * MIN_MULT)
+    maxDamage = int(damage * MAX_MULT)
 
     #find probanility of the move killing
     if currentHP > maxDamage:
@@ -35,6 +32,17 @@ def damge(pokeDataYours, pokeDataEnemies, moveData, ownership, currentHP):
     return (minDamage, maxDamage, probability)
 
 #def accuracy(stuff):
+
+def damageStatus(myStatus, theirStatus, mySeed, theirSeed):
+    raiseNotDefined()
+
+def raiseNotDefined():
+    fileName = inspect.stack()[1][1]
+    line = inspect.stack()[1][2]
+    method = inspect.stack()[1][3]
+
+    print "*** Method not implemented: %s at line %s of %s" % (method, line, fileName)
+    sys.exit(1)
 
 
 def calcMaxStats(data):
