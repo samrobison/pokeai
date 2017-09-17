@@ -1,4 +1,4 @@
-def calcDamge(poke1, poke2, moveData, currentHP):
+def calcDamge(poke1, poke2, move, currentHP):
     MIN_MULT = 0.85
     MAX_MULT = 1.0
     minDamage = 0
@@ -7,18 +7,18 @@ def calcDamge(poke1, poke2, moveData, currentHP):
 
     #find out whether STAB or not
     stab = 1.0
-    if (poke1.pokeType[0] == moveData.pokeType) or (poke1.pokeType[1] == moveData.pokeType):
+    if (poke1.type[0] == move.type) or (poke1.type[1] == move.type):
         stab = 1.5
 
     #find type effectiveness modifier
-    effective = TypeChart[moveData.pokeType][poke2.pokeType[0]] * TypeChart[moveData.pokeType][poke2.pokeType[1]]
+    effective = moveEffectiveness(move, poke2)
 
     #find damage before min max multiplier
     damage = 0
-    if moveData.category == 'Physical':
-        damage = int( ( int( (42 * moveData.power * int(poke1.stats()['atk'] / poke2.maxStats()['defe'])) / 50) + 2) * stab * effective)
-    elif moveData.category == 'special':
-        damage = int( ( int( (42 * moveData.power * int(poke1.stats()['spa'] / poke2.maxStats()['spd'])) / 50) + 2) * stab * effective)
+    if move.category == 'Physical':
+        damage = int( ( int( (42 * move.power * int(poke1.stats['atk'] / poke2.stats['defe'])) / 50) + 2) * stab * effective)
+    elif move.category == 'special':
+        damage = int( ( int( (42 * move.power * int(poke1.stats['spa'] / poke2.stats['spd'])) / 50) + 2) * stab * effective)
     minDamage = int(damage * MIN_MULT)
     maxDamage = int(damage * MAX_MULT)
 
@@ -33,8 +33,16 @@ def calcDamge(poke1, poke2, moveData, currentHP):
 
 #def accuracy(stuff):
 
+def moveEffectiveness(move, pokemon ):
+    return TypeChart[move.type][pokemon.type[0]] * TypeChart[move.type][pokemon.type[1]]
+
 def damageStatus(myStatus, theirStatus, mySeed, theirSeed):
     raiseNotDefined()
+
+def statusEffective(move, pokemon):
+    if move.type in pokemon.type or moveEffectiveness(move, pokemon) == 0:
+        return False
+    return True
 
 def raiseNotDefined():
     fileName = inspect.stack()[1][1]

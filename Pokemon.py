@@ -6,7 +6,7 @@ class Move:
         ### Data ###
         self.category = False
         self.power = 0
-        self.pokeType = ''
+        self.type = ''
         self.accuracy = 100
         self.name = ""
         self.zPower = None
@@ -20,7 +20,7 @@ class Move:
         self.nullInit()
         if moveHash != None:
             self.power = moveHash['basePower']
-            self.pokeType = moveHash['type']
+            self.type = moveHash['type']
             self.accuracy = moveHash['accuracy']
             self.name = moveHash['name']
             self.category = moveHash['category']
@@ -37,9 +37,11 @@ class Pokemon:
     def nullInit(self):
         ### Data ###
         self.moves = []
+        # data is basestats
         self.data = {}
+        # stats is calculated stats with ev's iv's and nature
         self.stats = {}
-        self.pokeType = ()
+        self.type = ()
         self.item = ""
         self.moveLocked = False
         self.friendly = True
@@ -55,14 +57,14 @@ class Pokemon:
         pokemon = Pokedex[name]
         self.name = name
         self.data = pokemon['baseStats']
-        self.pokeType = pokemon['types']
+        self.type = pokemon['types']
         self.otherFormes = []
         if 'otherFormes' in pokemon:
             self.otherFormes = pokemon['otherFormes']
         if len(pokemon['types']) == 1:
-            self.pokeType = (pokemon['types'][0], pokemon['types'][0])
+            self.type = (pokemon['types'][0], pokemon['types'][0])
         else:
-            self.pokeType = (pokemon['types'][0], pokemon['types'][1])
+            self.type = (pokemon['types'][0], pokemon['types'][1])
 
         if moves != None:
             for move in moves:

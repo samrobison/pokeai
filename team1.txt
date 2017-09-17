@@ -1,5 +1,14 @@
 === [gen71v1] Untitled 6 ===
 
+Celesteela @ Leftovers
+Ability: Beast Boost
+EVs: 252 HP / 4 Def / 252 SpD
+Careful Nature
+- Leech Seed
+- Protect
+- Toxic
+- Iron Head
+
 Porygon-Z @ Choice Scarf
 Ability: Adaptability
 EVs: 252 SpA / 252 Spe
@@ -8,15 +17,6 @@ Modest Nature
 - Dark Pulse
 - Hyper Beam
 - Ice Beam
-
-Celesteela @ Leftovers
-Ability: Beast Boost
-EVs: 252 HP / 4 Def / 252 SpD
-Careful Nature
-- Leech Seed
-- Protect
-- Toxic
-- Iron Head  
 
 Tapu Bulu @ Choice Scarf
 Ability: Grassy Surge
