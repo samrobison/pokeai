@@ -1,5 +1,7 @@
 from pokedex import Pokedex
 from libs import *
+from movedex import MoveDex
+from database import *
 
 class Move:
     def nullInit(self):
@@ -75,9 +77,18 @@ class Pokemon:
             self.item = itemHeld
             self.movedLockingItem = False
         else:
-            #get possible moves when availble
             self.stats = self.maxStats()
-            self.moves.append( Move(None) )
+            possibleMoves = findMovesForPokemon(self.name)
+            if len(possibleMoves) == 0:
+                self.moves.append(Move(None))
+            else:
+                for move in possibleMoves:
+                    if move[1] in MoveDex:
+                        self.moves.append( Move(MoveDex[str(move[1])]) )
+
+    def addMove(self, moveName):
+        if moveName in MoveDex:
+            self.moves.append( Move(MoveDex[moveName]) )
 
     def setStats(self, stats):
         self.data = stats

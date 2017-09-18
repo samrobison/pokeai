@@ -9,11 +9,11 @@ from Pokemon import Pokemon
 from libs import *
 from userinfo import password
 from userinfo import username
-from database import PokeDatabase
+from database import *
 
-treeTest = False
 battleHistory = []
-db = PokeDatabase()
+theyMissed = 0
+iMissed = 0
 
 def openBrowser():
     #sign in and make team
@@ -22,6 +22,12 @@ def openBrowser():
     time.sleep(3)
     driver.find_element_by_name("backup").click()
     return driver
+
+def muteGame(driver):
+    driver.find_element_by_name('openSounds').click()
+    time.sleep(2)
+    driver.find_element_by_name('muted').click()
+    time.sleep(1)
 
 def importTeam(fileName):
     team = ""
@@ -33,7 +39,7 @@ def parseTeam(team):
     #get my pokemon
     #pokemon 1
     myPokemon = []
-    name = team.splitlines()[2].split('@')[0].replace(" ", "").replace("-", "").lower()
+    name = nameFormat(team.splitlines()[2].split('@')[0])
     item = team.splitlines()[2].split('@')[1].strip()
     ability = team.splitlines()[3].split(':')[1].replace(" ", "")
     evs = team.splitlines()[4].split(':')[1].split('/')
@@ -44,16 +50,16 @@ def parseTeam(team):
         if key == 'def':
             key = 'defe'
         stats[key] = int(m1.group(1))
-    move1 = team.splitlines()[6].replace(" ", "").replace("-", "").lower()
-    move2 = team.splitlines()[7].replace(" ", "").replace("-", "").lower()
-    move3 = team.splitlines()[8].replace(" ", "").replace("-", "").lower()
-    move4 = team.splitlines()[9].replace(" ", "").replace("-", "").lower()
+    move1 = nameFormat(team.splitlines()[6])
+    move2 =  nameFormat(team.splitlines()[7])
+    move3 =  nameFormat(team.splitlines()[8])
+    move4 =  nameFormat(team.splitlines()[9])
 
     moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
     myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
 
     #pokemon 2
-    name = team.splitlines()[11].split('@')[0].replace(" ", "").replace("-", "").lower()
+    name = nameFormat(team.splitlines()[11].split('@')[0])
     item = team.splitlines()[11].split('@')[1].strip()
     ability = team.splitlines()[12].split(':')[1].replace(" ", "")
     evs = team.splitlines()[13].split(':')[1].split('/')
@@ -64,16 +70,16 @@ def parseTeam(team):
         if key == 'def':
             key = 'defe'
         stats[key] = int(m1.group(1))
-    move1 = team.splitlines()[15].replace(" ", "").replace("-", "").lower()
-    move2 = team.splitlines()[16].replace(" ", "").replace("-", "").lower()
-    move3 = team.splitlines()[17].replace(" ", "").replace("-", "").lower()
-    move4 = team.splitlines()[18].replace(" ", "").replace("-", "").lower()
+    move1 = nameFormat(team.splitlines()[15])
+    move2 = nameFormat(team.splitlines()[16])
+    move3 = nameFormat(team.splitlines()[17])
+    move4 = nameFormat(team.splitlines()[18])
 
     moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
     myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
 
     #pokemon 3
-    name = team.splitlines()[20].split('@')[0].replace(" ", "").replace("-", "").lower()
+    name = nameFormat(team.splitlines()[20].split('@')[0])
     item = team.splitlines()[20].split('@')[1].strip()
     ability = team.splitlines()[21].split(':')[1].replace(" ", "")
     evs = team.splitlines()[22].split(':')[1].split('/')
@@ -84,10 +90,10 @@ def parseTeam(team):
         if key == 'def':
             key = 'defe'
         stats[key] = int(m1.group(1))
-    move1 = team.splitlines()[24].replace(" ", "").replace("-", "").lower()
-    move2 = team.splitlines()[25].replace(" ", "").replace("-", "").lower()
-    move3 = team.splitlines()[26].replace(" ", "").replace("-", "").lower()
-    move4 = team.splitlines()[27].replace(" ", "").replace("-", "").lower()
+    move1 = nameFormat(team.splitlines()[24])
+    move2 = nameFormat(team.splitlines()[25])
+    move3 = nameFormat(team.splitlines()[26])
+    move4 = nameFormat(team.splitlines()[27])
 
     moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
     myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
@@ -137,9 +143,8 @@ def wait(driver, value, func):
 def createEnemyPokemon(otherPokemon):
     enemyPokemon = []
     for p in otherPokemon:
-        name = str(p)
-        name = name.lower()
-        name = name.replace(" ", "").replace("-", "")
+        name = nameFormat(str(p))
+
         enemyPokemon.append(Pokemon(name))
     return enemyPokemon
 
@@ -151,15 +156,16 @@ def parseEnemyPokemon(driver):
         if "team" in chat.text:
             if username not in chat.text:
                 otherPokemon = chat.text.splitlines()[1].split('/')
+
     return otherPokemon
 
 def selectPokemon(driver, pokemon):
     buttons = driver.find_element_by_class_name("switchmenu").find_elements_by_tag_name("button")
     for button in buttons:
-        buttonName = button.text.lower().replace(" ", "").replace("-", "")
+        buttonName = nameFormat(button.text)
         if buttonName in pokemon or pokemon in buttonName:
             button.click()
-            print pokemon + "successfully sent out"
+            print pokemon + " successfully sent out"
             return
 
     raise Exception("Failed to find button for " + pokemon)
@@ -172,7 +178,7 @@ def parseTheirChoice(driver):
     for element in driver.find_elements_by_class_name('battle-history'):
         battleHistory.append(element.text)
         if "sent out" in element.text:
-            theirPick = element.text.split('sent out')[1].replace(" ", "").replace("-", "").replace("!", "").lower()
+            theirPick = nameFormat(element.text.split('sent out')[1].replace("!", ""))
             if "(" in theirPick:
                 theirPick = theirPick.split("(")[1].replace(")", "")
             print theirPick
@@ -184,7 +190,7 @@ def lockInMove(driver, myMove):
         return over
     buttons = driver.find_element_by_class_name("movecontrols").find_elements_by_tag_name("button")
     for move in buttons:
-        if myMove in move.text or move.text in myMove:
+        if myMove in move.text or move.text in myMove or 'recharge' in move.text:
             move.click()
             return
 
@@ -196,42 +202,87 @@ def waitForNextTurn(driver, currentTurn):
     turn = currentTurn
     while turn == currentTurn:
         for header in driver.find_elements_by_css_selector('h2.battle-history'):
-            turn = int(header.text.split("Turn")[1])
-            return turn
+            t = int(header.text.split("Turn ")[1])
+            if t > turn:
+                turn = t
+                return t
         for chat in driver.find_elements_by_css_selector('div.battle-history'):
             if 'botLife won the battle!' in chat.text:
+                message(driver, 'GG. Getting smarter every game! \n')
                 return -1
             elif 'won the battle' in chat.text:
+                message(driver, "Looks like humans are still better... for now  \n")
                 return -2
         print 'waiting for enemy to select move'
         time.sleep(0.5)
 
 def getTurnInfo(driver, turn, enemyName):
-    turnInfo = ['enemyMove', 0, 'damageToThem', True, 'theirMoveSuccessful']
+    global theyMissed
+    global iMissed
+    # def correctTree(self, enemyMove, damageToMe, damageToThem, myMoveSuccessful, theirMoveSuccessful):
+
+    turnInfo = ['enemyMove', 0, 0, True, True]
     for chat in driver.find_elements_by_css_selector('div.battle-history'):
         text = chat.text
-        if text not in battleHistory:
+        if 'opposing' in text:
+            info = parseHistory(text, iMissed)
+            turnInfo[0] = info[0] or turnInfo[0]
+            turnInfo[2] = info[1] or turnInfo[2]
+            turnInfo[3] = info[2] or turnInfo[3]
+            if not (info[2] is not None or info[2]):
+                iMissed += 1
+        else:
+            info = parseHistory(text, theyMissed)
+            turnInfo[1] = info[1] or turnInfo[1]
+            turnInfo[4] = info[2] or turnInfo[4]
+            if not (info[2] is not None or info[2]):
+                theyMissed += 1
+    print turnInfo
+    return turnInfo
+
+def parseHistory(text, missedCount):
+    turnInfo = [None, None, None] #[move, damage, successful]
+    if text not in battleHistory:
+        avoided = 0
+        if 'used' in text and 'opposing' in text:
+            move = nameFormat(text.split("used ")[1].replace("!", ""))
+            turnInfo[0] = move
+            # print "Move to add: " + move
+            # addNewMove(move, enemyName)
+            # battleHistory.append(text)
+            # add to database
+        elif 'avoided' in text:
+            avoided += 1
+            if avoided > missedCount:
+                turnInfo[2] = False
+                turnInfo[1] = 0
+                missedCount += 1
+        if 'lost' in text and 'some of its HP' not in text:
+            damage = text.split("lost ")[1].replace("% of its health!", "")
+            print damage
+            damage = float(damage)
+            if turnInfo[1] is None:
+                turnInfo[1] = 0
+            turnInfo[1] += damage
             battleHistory.append(text)
-            if 'opposing' in text:
-                if 'used' in text:
-                    move = text.split("used ")[1].replace("!", "").replace(" ", "").replace("-", "").lower()
-                    turnInfo[0] = move
-                    db.addNewMove(move, enemyName)
-                    #add to database
-                elif 'avoided' in text:
-                    # mymove successful
-                    turnInfo[3] = False
-                    # damage to them
-                    turnInfo[2] = 0
+        else:
+            battleHistory.append(text)
     return turnInfo
 
 
+def message(driver, message):
+    messageArea = driver.find_element_by_class_name('chatbox').find_elements_by_tag_name('textarea')[1]
+    try:
+        if messageArea != None:
+            messageArea.send_keys(message)
+    except:
+        print "Message failed"
 def battle(driver, myPokemon):
     #get opponent's pokemon
     enemyNames = parseEnemyPokemon(driver)
     enemyPokemon = createEnemyPokemon(enemyNames)
 
-    tree = Tree(myPokemon, enemyPokemon, db)
+    tree = Tree(myPokemon, enemyPokemon)
     myChoice =  tree.choosePokemon()
 
     selectPokemon(driver, myChoice)
@@ -239,53 +290,77 @@ def battle(driver, myPokemon):
 
     turn = 0
     turn = waitForNextTurn(driver, turn)
+    print turn
     if turn > 0:
         theirChoice = parseTheirChoice(driver)
         tree.findRootForPicked(myChoice, theirChoice)
-    while turn >= 0:
+        message(driver, 'Hello! I am PokeAi Version 0.1.8, Thanks for training me! \nNew this version: MDP rewards for protect modified\n')
+
+    while turn > 0:
+        print "------------------TURN "+ str(turn) + "------------------"
         move = tree.getNextMove()
-        lock = lockInMove(driver, move)
+        if  move[1] <= 0:
+            message(driver, "This is awkward looks like i can't win\n")
+        lock = lockInMove(driver, move[0])
         turn = waitForNextTurn(driver, turn)
+
         try:
             info = getTurnInfo(driver, turn - 1, theirChoice)
-            print info
+            tree.correctTree(info[0], info[1], info[2], info[3], info[4])
         except:
-            print traceback.format_exc()
+            tb = traceback.format_exc()
+            print tb
+            message(driver, 'Congratulations! You made me crash somehow. Take a look:')
+            message(driver, tb)
+            tree.correctTree(None, None, None, None, None)
 
-        tree.correctTree(None, None, None, None, None)
+        if turn < 0:
+            return turn
+
 
 def afterBattle(driver):
     time.sleep(20)
     driver.close()
 
+
 def main():
+    initDb()
+    treeTest = False
     if treeTest:
         pokeText = importTeam('team1.txt')
         myPokemon = parseTeam(pokeText)
         enemyNames = ["venusaur", "tapukoko", "greninja"]
         enemyPokemon = createEnemyPokemon(enemyNames)
-        tree = Tree(myPokemon, enemyPokemon, db)
+        tree = Tree(myPokemon, enemyPokemon)
         choice =  tree.choosePokemon()
         from random import randint
-        randomChoice = enemyNames[randint(0,2)]
+        # randomChoice = enemyNames[randint(0,2)]
+        randomChoice = enemyNames[2]
         print "Enemy chose: " + randomChoice
         tree.findRootForPicked(choice, randomChoice)
         tree.getNextMove()
-        tree.correctTree(None, None, None, None, None)
+        # def correctTree(self, enemyMove, damageToMe, damageToThem, myMoveSuccessful, theirMoveSuccessful):
+        tree.correctTree('fusionbolt', 70.0, 0, False, True)
         tree.getNextMove()
     else:
         driver = openBrowser()
+        muteGame(driver)
         try:
             pokeText = importTeam('team1.txt')
             myPokemon = parseTeam(pokeText)
             inputTeam(driver, pokeText)
             login(driver)
-            url = queueMatch(driver)
-            wait(driver, url, (lambda d, u: u == d.current_url))
-            battle(driver, myPokemon)
+            for i in range(3):
+                battleHistory = []
+                url = queueMatch(driver)
+                wait(driver, url, (lambda d, u: u == d.current_url))
+                battle(driver, myPokemon)
             afterBattle(driver)
         except:
-            print traceback.format_exc()
+            tb = traceback.format_exc()
+            print tb
+            message(driver, 'Congratulations! You made me crash somehow. Take a look:')
+            message(driver, tb.replace('sam', 'someCoder'))
             afterBattle(driver)
 
 

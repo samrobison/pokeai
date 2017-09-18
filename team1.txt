@@ -13,9 +13,9 @@ Porygon-Z @ Choice Scarf
 Ability: Adaptability
 EVs: 252 SpA / 252 Spe
 Modest Nature
-- Thunderbolt
-- Dark Pulse
 - Hyper Beam
+- Dark Pulse
+- Thunderbolt
 - Ice Beam
 
 Tapu Bulu @ Choice Scarf

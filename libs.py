@@ -8,7 +8,10 @@ def calcDamge(poke1, poke2, move, currentHP):
     #find out whether STAB or not
     stab = 1.0
     if (poke1.type[0] == move.type) or (poke1.type[1] == move.type):
-        stab = 1.5
+        if poke1.ability == 'Adaptability':
+            stab = 1.5 * 1.5
+        else:
+            stab = 1.5
 
     #find type effectiveness modifier
     effective = moveEffectiveness(move, poke2)
@@ -52,6 +55,8 @@ def raiseNotDefined():
     print "*** Method not implemented: %s at line %s of %s" % (method, line, fileName)
     sys.exit(1)
 
+def nameFormat(text):
+    return text.replace(" ", "").replace("-", "").replace("'", "").replace("*", "").lower()
 
 def calcMaxStats(data):
     iv = 31
