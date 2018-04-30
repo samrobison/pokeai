@@ -17,7 +17,7 @@ iMissed = 0
 
 def openBrowser():
     #sign in and make team
-    driver = webdriver.Chrome('./chromedriver')
+    driver = webdriver.Chrome('chromedriver.exe')
     driver.get('http://play.pokemonshowdown.com/teambuilder');
     time.sleep(3)
     driver.find_element_by_name("backup").click()
@@ -35,75 +35,7 @@ def importTeam(fileName):
         team=myFile.read()
     return team
 
-def parseTeam(team):
-    #get my pokemon
-    #pokemon 1
-    myPokemon = []
-    name = nameFormat(team.splitlines()[2].split('@')[0])
-    item = team.splitlines()[2].split('@')[1].strip()
-    ability = team.splitlines()[3].split(':')[1].replace(" ", "")
-    evs = team.splitlines()[4].split(':')[1].split('/')
-    stats = {}
-    for ev in evs:
-        m1 = re.search('(\d+)\s(\w+)', ev)
-        key = m1.group(2).lower()
-        if key == 'def':
-            key = 'defe'
-        stats[key] = int(m1.group(1))
-    move1 = nameFormat(team.splitlines()[6])
-    move2 =  nameFormat(team.splitlines()[7])
-    move3 =  nameFormat(team.splitlines()[8])
-    move4 =  nameFormat(team.splitlines()[9])
 
-    moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
-    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
-
-    #pokemon 2
-    name = nameFormat(team.splitlines()[11].split('@')[0])
-    item = team.splitlines()[11].split('@')[1].strip()
-    ability = team.splitlines()[12].split(':')[1].replace(" ", "")
-    evs = team.splitlines()[13].split(':')[1].split('/')
-    stats = {}
-    for ev in evs:
-        m1 = re.search('(\d+)\s(\w+)', ev)
-        key = m1.group(2).lower()
-        if key == 'def':
-            key = 'defe'
-        stats[key] = int(m1.group(1))
-    move1 = nameFormat(team.splitlines()[15])
-    move2 = nameFormat(team.splitlines()[16])
-    move3 = nameFormat(team.splitlines()[17])
-    move4 = nameFormat(team.splitlines()[18])
-
-    moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
-    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
-
-    #pokemon 3
-    name = nameFormat(team.splitlines()[20].split('@')[0])
-    item = team.splitlines()[20].split('@')[1].strip()
-    ability = team.splitlines()[21].split(':')[1].replace(" ", "")
-    evs = team.splitlines()[22].split(':')[1].split('/')
-    stats = {}
-    for ev in evs:
-        m1 = re.search('(\d+)\s(\w+)', ev)
-        key = m1.group(2).lower()
-        if key == 'def':
-            key = 'defe'
-        stats[key] = int(m1.group(1))
-    move1 = nameFormat(team.splitlines()[24])
-    move2 = nameFormat(team.splitlines()[25])
-    move3 = nameFormat(team.splitlines()[26])
-    move4 = nameFormat(team.splitlines()[27])
-
-    moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
-    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
-    return myPokemon
-
-def inputTeam(driver, teamText):
-    #back to inputing team
-
-    driver.find_elements_by_class_name('textbox')[0].send_keys(teamText)
-    driver.find_element_by_name("saveBackup").click()
 
 def login(driver):
     driver.find_element_by_name("login").click()
@@ -117,12 +49,6 @@ def login(driver):
 def queueMatch(driver):
     driver.get('http://play.pokemonshowdown.com')
     time.sleep(5)
-
-    for i in range(1):
-        driver.find_element_by_name("format").click()
-        time.sleep(1)
-        driver.find_elements_by_xpath("//button[@value='gen71v1']")[0].click()
-        time.sleep(1)
 
     url = driver.current_url
     driver.find_element_by_name("search").click()
@@ -144,7 +70,6 @@ def createEnemyPokemon(otherPokemon):
     enemyPokemon = []
     for p in otherPokemon:
         name = nameFormat(str(p))
-
         enemyPokemon.append(Pokemon(name))
     return enemyPokemon
 
@@ -277,7 +202,24 @@ def message(driver, message):
             messageArea.send_keys(message)
     except:
         print("Message failed")
-def battle(driver, myPokemon):
+
+def parse_my_team(driver):
+    battle_search = re.search('https://play.pokemonshowdown.com/(battle-gen7randombattle-\d+)', driver.current_url)
+    battle_query = battle_search.group(1)
+    pokemon = []
+    for i in range(5):
+        driver.execute_script("let button = $('.disabled')[0]; BattleTooltips.showTooltipFor('%s',%s ,'sidepokemon', button, false)"% (battle_query, str(i)))
+        # pokemon_info will have a string in the form of Manaphy L76HP: 100.0% (277/277)Ability: Hydration / Item: Choice Scarf157 Atk / 196 Def / 196 SpA / 196 SpD / 196 Spe• Energy Ball• Psychic• Surf• Ice Beam
+        pokemon_info = driver.find_element_by_id('tooltipwrapper').text
+        print(pokemon_info)
+        #TODO: parse string and make pokemon object out of it
+        pokemon.append(pokemon_info)
+
+    return pokemon_info
+
+
+def battle(driver):
+    myPokemon = parse_my_team(driver)
     #get opponent's pokemon
     enemyNames = parseEnemyPokemon(driver)
     enemyPokemon = createEnemyPokemon(enemyNames)
@@ -328,33 +270,30 @@ def main():
     treeTest = False
     if treeTest:
         pokeText = importTeam('team1.txt')
-        myPokemon = parseTeam(pokeText)
-        enemyNames = ["venusaur", "tapukoko", "greninja"]
-        enemyPokemon = createEnemyPokemon(enemyNames)
-        tree = Tree(myPokemon, enemyPokemon)
-        choice =  tree.choosePokemon()
-        from random import randint
-        # randomChoice = enemyNames[randint(0,2)]
-        randomChoice = enemyNames[2]
-        print(("Enemy chose: " + randomChoice))
-        tree.findRootForPicked(choice, randomChoice)
-        tree.getNextMove()
-        # def correctTree(self, enemyMove, damageToMe, damageToThem, myMoveSuccessful, theirMoveSuccessful):
-        tree.correctTree('fusionbolt', 70.0, 0, False, True)
-        tree.getNextMove()
+        # myPokemon = parseTeam(pokeText)
+        # enemyNames = ["venusaur", "tapukoko", "greninja"]
+        # enemyPokemon = createEnemyPokemon(enemyNames)
+        # tree = Tree(myPokemon, enemyPokemon)
+        # choice =  tree.choosePokemon()
+        # from random import randint
+        # # randomChoice = enemyNames[randint(0,2)]
+        # randomChoice = enemyNames[2]
+        # print(("Enemy chose: " + randomChoice))
+        # tree.findRootForPicked(choice, randomChoice)
+        # tree.getNextMove()
+        # # def correctTree(self, enemyMove, damageToMe, damageToThem, myMoveSuccessful, theirMoveSuccessful):
+        # tree.correctTree('fusionbolt', 70.0, 0, False, True)
+        # tree.getNextMove()
     else:
         driver = openBrowser()
         muteGame(driver)
         try:
-            pokeText = importTeam('team1.txt')
-            myPokemon = parseTeam(pokeText)
-            inputTeam(driver, pokeText)
             login(driver)
             for i in range(3):
                 battleHistory = []
                 url = queueMatch(driver)
                 wait(driver, url, (lambda d, u: u == d.current_url))
-                battle(driver, myPokemon)
+                battle(driver)
             afterBattle(driver)
         except:
             tb = traceback.format_exc()
