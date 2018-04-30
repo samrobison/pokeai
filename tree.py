@@ -200,7 +200,7 @@ class Tree:
             for theirPoke in theirPokeSet:
                 threads = []
                 for myPoke in myPokeSet:
-                    print(myPoke.name + " "+ theirPoke.name)
+                    print((myPoke.name + " "+ theirPoke.name))
                     battleRoot = Node(par=self.rootNode, poke1=myPoke, poke2=theirPoke)
                     self.rootNode.addChild(battleRoot)
                     t = threading.Thread(target=self.fillPath, args=(battleRoot, 0))
@@ -213,12 +213,12 @@ class Tree:
                     t.start()
                 for t in set:
                     t.join()
-                print('Set ' + str(threadSet.index(set) + 1) + " finished ")
+                print(('Set ' + str(threadSet.index(set) + 1) + " finished "))
 
         else:
             for myPoke in myPokeSet:
                 for theirPoke in theirPokeSet:
-                    print(myPoke.name + " " + theirPoke.name)
+                    print((myPoke.name + " " + theirPoke.name))
                     battleRoot = Node(par=self.rootNode, poke1=myPoke, poke2=theirPoke)
                     self.rootNode.addChild(battleRoot)
                     self.fillPath(battleRoot, 0)
@@ -336,7 +336,7 @@ class Tree:
         for child in self.rootNode.children:
             if child.myPokemon.name == mine and child.theirPokemon.name == theirs:
                 self.currentState = child
-                print self.currentState.myPokemon.name + " " + self.currentState.theirPokemon.name
+                print(self.currentState.myPokemon.name + " " + self.currentState.theirPokemon.name)
                 return child
         raise Exception("Node not found for mypokemon: "+ mine +" theirpokemon: " + theirs)
 
@@ -344,14 +344,14 @@ class Tree:
         state = None
         maxReward = -9999999
         if self.currentState.children is None:
-            print "End reached before game ended"
+            print("End reached before game ended")
             return
         for child in self.currentState.children:
-            print child.myMove.name + " " + str(child.edge.reward)
+            print(child.myMove.name + " " + str(child.edge.reward))
             if maxReward < child.edge.reward:
                 state = child
                 maxReward = child.edge.reward
-        print "Greedy Move: " + state.myMove.name
+        print("Greedy Move: " + state.myMove.name)
         self.predictiveState = state
 
     def getNextMove(self):
@@ -385,7 +385,7 @@ class Tree:
         node.damage(dam2, dam1)
 
         #rebranch
-        print "Rebuilding tree"
+        print("Rebuilding tree")
         self.fillPath(node, 5)
         self.currentState = node
 

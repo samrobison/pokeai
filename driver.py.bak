@@ -135,7 +135,7 @@ def wait(driver, value, func):
                 return -1
             elif 'won the battle' in chat.text:
                 return -2
-        print('waiting')
+        print 'waiting'
         time.sleep(1)
     time.sleep(4)
     return 0
@@ -165,7 +165,7 @@ def selectPokemon(driver, pokemon):
         buttonName = nameFormat(button.text)
         if buttonName in pokemon or pokemon in buttonName:
             button.click()
-            print((pokemon + " successfully sent out"))
+            print pokemon + " successfully sent out"
             return
 
     raise Exception("Failed to find button for " + pokemon)
@@ -181,7 +181,7 @@ def parseTheirChoice(driver):
             theirPick = nameFormat(element.text.split('sent out')[1].replace("!", ""))
             if "(" in theirPick:
                 theirPick = theirPick.split("(")[1].replace(")", "")
-            print(theirPick)
+            print theirPick
             return theirPick
 
 def lockInMove(driver, myMove):
@@ -195,7 +195,7 @@ def lockInMove(driver, myMove):
             return
 
     for move in buttons:
-        print((move.text))
+        print move.text
     raise Exception("Failed to find button for " + myMove)
 
 def waitForNextTurn(driver, currentTurn):
@@ -213,7 +213,7 @@ def waitForNextTurn(driver, currentTurn):
             elif 'won the battle' in chat.text:
                 message(driver, "Looks like humans are still better... for now  \n")
                 return -2
-        print('waiting for enemy to select move')
+        print 'waiting for enemy to select move'
         time.sleep(0.5)
 
 def getTurnInfo(driver, turn, enemyName):
@@ -237,7 +237,7 @@ def getTurnInfo(driver, turn, enemyName):
             turnInfo[4] = info[2] or turnInfo[4]
             if not (info[2] is not None or info[2]):
                 theyMissed += 1
-    print(turnInfo)
+    print turnInfo
     return turnInfo
 
 def parseHistory(text, missedCount):
@@ -259,7 +259,7 @@ def parseHistory(text, missedCount):
                 missedCount += 1
         if 'lost' in text and 'some of its HP' not in text:
             damage = text.split("lost ")[1].replace("% of its health!", "")
-            print(damage)
+            print damage
             damage = float(damage)
             if turnInfo[1] is None:
                 turnInfo[1] = 0
@@ -276,7 +276,7 @@ def message(driver, message):
         if messageArea != None:
             messageArea.send_keys(message)
     except:
-        print("Message failed")
+        print "Message failed"
 def battle(driver, myPokemon):
     #get opponent's pokemon
     enemyNames = parseEnemyPokemon(driver)
@@ -290,14 +290,14 @@ def battle(driver, myPokemon):
 
     turn = 0
     turn = waitForNextTurn(driver, turn)
-    print(turn)
+    print turn
     if turn > 0:
         theirChoice = parseTheirChoice(driver)
         tree.findRootForPicked(myChoice, theirChoice)
         message(driver, 'Hello! I am PokeAi Version 0.1.8, Thanks for training me! \nNew this version: MDP rewards for protect modified\n')
 
     while turn > 0:
-        print(("------------------TURN "+ str(turn) + "------------------"))
+        print "------------------TURN "+ str(turn) + "------------------"
         move = tree.getNextMove()
         if  move[1] <= 0:
             message(driver, "This is awkward looks like i can't win\n")
@@ -309,7 +309,7 @@ def battle(driver, myPokemon):
             tree.correctTree(info[0], info[1], info[2], info[3], info[4])
         except:
             tb = traceback.format_exc()
-            print(tb)
+            print tb
             message(driver, 'Congratulations! You made me crash somehow. Take a look:')
             message(driver, tb)
             tree.correctTree(None, None, None, None, None)
@@ -336,7 +336,7 @@ def main():
         from random import randint
         # randomChoice = enemyNames[randint(0,2)]
         randomChoice = enemyNames[2]
-        print(("Enemy chose: " + randomChoice))
+        print "Enemy chose: " + randomChoice
         tree.findRootForPicked(choice, randomChoice)
         tree.getNextMove()
         # def correctTree(self, enemyMove, damageToMe, damageToThem, myMoveSuccessful, theirMoveSuccessful):
@@ -358,7 +358,7 @@ def main():
             afterBattle(driver)
         except:
             tb = traceback.format_exc()
-            print(tb)
+            print tb
             message(driver, 'Congratulations! You made me crash somehow. Take a look:')
             message(driver, tb.replace('sam', 'someCoder'))
             afterBattle(driver)
