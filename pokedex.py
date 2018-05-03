@@ -3365,7 +3365,7 @@ Pokedex = {
 		'weightkg': 5,
 		'color': "Black",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["unownb", "unownc", "unownd", "unowne", "unownf", "unowng", "unownh", "unowni", "unownj", "unownk", "unownl", "unownm", "unownn", "unowno", "unownp", "unownq", "unownr", "unowns", "unownt", "unownu", "unownv", "unownw", "unownx", "unowny", "unownz", "unownexclamation", "unownquestion"],
+		'other_forms': ["unownb", "unownc", "unownd", "unowne", "unownf", "unowng", "unownh", "unowni", "unownj", "unownk", "unownl", "unownm", "unownn", "unowno", "unownp", "unownq", "unownr", "unowns", "unownt", "unownu", "unownv", "unownw", "unownx", "unowny", "unownz", "unownexclamation", "unownquestion"],
 	},
 	'wobbuffet': {
 		'num': 202,
@@ -6561,7 +6561,7 @@ Pokedex = {
 		'color': "Green",
 		'evos': ["wormadam", "wormadamsandy", "wormadamtrash", "mothim"],
 		'eggGroups': ["Bug"],
-		'otherForms': ["burmysandy", "burmytrash"],
+		'other_forms': ["burmysandy", "burmytrash"],
 	},
 	'wormadam': {
 		'num': 413,
@@ -6745,7 +6745,7 @@ Pokedex = {
 		'color': "Purple",
 		'evos': ["gastrodon"],
 		'eggGroups': ["Water 1", "Amorphous"],
-		'otherForms': ["shelloseast"],
+		'other_forms': ["shelloseast"],
 	},
 	'gastrodon': {
 		'num': 423,
@@ -6760,7 +6760,7 @@ Pokedex = {
 		'prevo': "shellos",
 		'evoLevel': 30,
 		'eggGroups': ["Water 1", "Amorphous"],
-		'otherForms': ["gastrodoneast"],
+		'other_forms': ["gastrodoneast"],
 	},
 	'ambipom': {
 		'num': 424,
@@ -9342,7 +9342,7 @@ Pokedex = {
 		'color': "Pink",
 		'evos': ["sawsbuck"],
 		'eggGroups': ["Field"],
-		'otherForms': ["deerlingsummer", "deerlingautumn", "deerlingwinter"],
+		'other_forms': ["deerlingsummer", "deerlingautumn", "deerlingwinter"],
 	},
 	'sawsbuck': {
 		'num': 586,
@@ -9357,7 +9357,7 @@ Pokedex = {
 		'prevo': "deerling",
 		'evoLevel': 34,
 		'eggGroups': ["Field"],
-		'otherForms': ["sawsbucksummer", "sawsbuckautumn", "sawsbuckwinter"],
+		'other_forms': ["sawsbucksummer", "sawsbuckautumn", "sawsbuckwinter"],
 	},
 	'emolga': {
 		'num': 587,
@@ -10567,7 +10567,7 @@ Pokedex = {
 		'prevo': "spewpa",
 		'evoLevel': 12,
 		'eggGroups': ["Bug"],
-		'otherForms': ["vivillonarchipelago", "vivilloncontinental", "vivillonelegant", "vivillongarden", "vivillonhighplains", "vivillonicysnow", "vivillonjungle", "vivillonmarine", "vivillonmodern", "vivillonmonsoon", "vivillonocean", "vivillonpolar", "vivillonriver", "vivillonsandstorm", "vivillonsavanna", "vivillonsun", "vivillontundra"],
+		'other_forms': ["vivillonarchipelago", "vivilloncontinental", "vivillonelegant", "vivillongarden", "vivillonhighplains", "vivillonicysnow", "vivillonjungle", "vivillonmarine", "vivillonmodern", "vivillonmonsoon", "vivillonocean", "vivillonpolar", "vivillonriver", "vivillonsandstorm", "vivillonsavanna", "vivillonsun", "vivillontundra"],
 		'otherFormes': ["vivillonfancy", "vivillonpokeball"],
 	},
 	'vivillonfancy': {
@@ -10638,7 +10638,7 @@ Pokedex = {
 		'color': "White",
 		'evos': ["floette"],
 		'eggGroups': ["Fairy"],
-		'otherForms': ["flabebeblue", "flabebeorange", "flabebewhite", "flabebeyellow"],
+		'other_forms': ["flabebeblue", "flabebeorange", "flabebewhite", "flabebeyellow"],
 	},
 	'floette': {
 		'num': 670,
@@ -10655,7 +10655,7 @@ Pokedex = {
 		'evos': ["florges"],
 		'evoLevel': 19,
 		'eggGroups': ["Fairy"],
-		'otherForms': ["floetteblue", "floetteorange", "floettewhite", "floetteyellow"],
+		'other_forms': ["floetteblue", "floetteorange", "floettewhite", "floetteyellow"],
 		'otherFormes': ["floetteeternal"],
 	},
 	'floetteeternal': {
@@ -10687,7 +10687,7 @@ Pokedex = {
 		'prevo': "floette",
 		'evoLevel': 19,
 		'eggGroups': ["Fairy"],
-		'otherForms': ["florgesblue", "florgesorange", "florgeswhite", "florgesyellow"],
+		'other_forms': ["florgesblue", "florgesorange", "florgeswhite", "florgesyellow"],
 	},
 	'skiddo': {
 		'num': 672,
@@ -12565,7 +12565,7 @@ Pokedex = {
 		'color': "Red",
 		'eggGroups': ["Mineral"],
 		'otherFormes': ["miniormeteor"],
-		'otherForms': ["miniororange", "minioryellow", "miniorgreen", "miniorblue", "miniorindigo", "miniorviolet"],
+		'other_forms': ["miniororange", "minioryellow", "miniorgreen", "miniorblue", "miniorindigo", "miniorviolet"],
 	},
 	'miniormeteor': {
 		'num': 774,
@@ -13448,7 +13448,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarufopropu1"],
+		'other_forms': ["pokestarufopropu1"],
 		'otherFormes': ["pokestarufo2", "pokestarufopropu2"],
 	},
 	'pokestarufo2': {
@@ -13477,7 +13477,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarbrycenmanprop"],
+		'other_forms': ["pokestarbrycenmanprop"],
 	},
 	'pokestarmt': {
 		'num': -5003,
@@ -13490,7 +13490,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarmtprop"],
+		'other_forms': ["pokestarmtprop"],
 	},
 	'pokestarmt2': {
 		'num': -5004,
@@ -13503,7 +13503,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarmt2prop"],
+		'other_forms': ["pokestarmt2prop"],
 	},
 	'pokestartransport': {
 		'num': -5005,
@@ -13516,7 +13516,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestartransportprop"],
+		'other_forms': ["pokestartransportprop"],
 	},
 	'pokestargiant': {
 		'num': -5006,
@@ -13529,7 +13529,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestargiant2", "pokestargiantpropo1", "pokestargiantpropo2"],
+		'other_forms': ["pokestargiant2", "pokestargiantpropo1", "pokestargiantpropo2"],
 	},
 	'pokestarhumanoid': {
 		'num': -5007,
@@ -13541,7 +13541,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarhumanoidprop"],
+		'other_forms': ["pokestarhumanoidprop"],
 	},
 	'pokestarmonster': {
 		'num': -5008,
@@ -13553,7 +13553,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarmonsterprop"],
+		'other_forms': ["pokestarmonsterprop"],
 	},
 	'pokestarf00': {
 		'num': -5009,
@@ -13565,7 +13565,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarf00prop"],
+		'other_forms': ["pokestarf00prop"],
 	},
 	'pokestarf002': {
 		'num': -5010,
@@ -13577,7 +13577,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarf002prop"],
+		'other_forms': ["pokestarf002prop"],
 	},
 	'pokestarspirit': {
 		'num': -5011,
@@ -13589,7 +13589,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarspiritprop"],
+		'other_forms': ["pokestarspiritprop"],
 	},
 	'pokestarblackdoor': {
 		'num': -5012,
@@ -13602,7 +13602,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarblackdoorprop"],
+		'other_forms': ["pokestarblackdoorprop"],
 	},
 	'pokestarwhitedoor': {
 		'num': -5013,
@@ -13615,7 +13615,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarwhitedoorprop"],
+		'other_forms': ["pokestarwhitedoorprop"],
 	},
 	'pokestarblackbelt': {
 		'num': -5014,
@@ -13628,7 +13628,7 @@ Pokedex = {
 		'weightkg': 61,
 		'color': "White",
 		'eggGroups': ["Undiscovered"],
-		'otherForms': ["pokestarblackbeltprop"],
+		'other_forms': ["pokestarblackbeltprop"],
 	},
 	'pokestarufopropu2': {
 		'num': -5001,

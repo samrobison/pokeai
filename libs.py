@@ -1,3 +1,6 @@
+import sys
+import inspect
+
 def calcDamge(poke1, poke2, move, currentHP):
     MIN_MULT = 0.85
     MAX_MULT = 1.0
@@ -55,10 +58,11 @@ def raiseNotDefined():
     print("*** Method not implemented: %s at line %s of %s" % (method, line, fileName))
     sys.exit(1)
 
+
 def nameFormat(text):
     return text.replace(" ", "").replace("-", "").replace("'", "").replace("*", "").lower()
 
-def calcMaxStats(data):
+def calc_max_stats(data):
     iv = 31
     ev = 63
     newData = {}
@@ -71,7 +75,7 @@ def calcMaxStats(data):
     newData['spe']  = (5 + data['spe']  * 2 + ev + iv) * 1.1
     return newData
 
-def calcMinStats(data):
+def calc_min_stats(data):
     iv = 31
     ev = 0
     newData = {}

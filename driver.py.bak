@@ -56,7 +56,7 @@ def parseTeam(team):
     move4 =  nameFormat(team.splitlines()[9])
 
     moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
-    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
+    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, item_held=item))
 
     #pokemon 2
     name = nameFormat(team.splitlines()[11].split('@')[0])
@@ -76,7 +76,7 @@ def parseTeam(team):
     move4 = nameFormat(team.splitlines()[18])
 
     moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
-    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
+    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, item_held=item))
 
     #pokemon 3
     name = nameFormat(team.splitlines()[20].split('@')[0])
@@ -96,7 +96,7 @@ def parseTeam(team):
     move4 = nameFormat(team.splitlines()[27])
 
     moves = [MoveDex[move1], MoveDex[move2], MoveDex[move3], MoveDex[move4]]
-    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, itemHeld=item))
+    myPokemon.append(Pokemon(name, abil=ability, moves=moves, stat=stats, item_held=item))
     return myPokemon
 
 def inputTeam(driver, teamText):

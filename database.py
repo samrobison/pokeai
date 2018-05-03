@@ -12,7 +12,7 @@ def dbSetup():
     conn = sqlite3.connect(databasePath)
     conn.execute('''CREATE TABLE seenMoves
             ( pokemonName CHAR(50) NOT NULL ,
-            moveName CHAR(50) NOT NULL,
+            move_name CHAR(50) NOT NULL,
             timesSeen INT NOT NULL DEFAULT 0,
             pokemonSeen INT NOT NULL DEFAULT 0
             );
@@ -37,11 +37,11 @@ def updateMovesSeen( moves, pokemonName):
     conn.close()
 
     for move in moves:
-        c.execute("UPDATE seenMoves SET timesSeen = timesSeen + 1 WHERE pokemonName = '" + pokemonName + "' and moveName = '" + move +"';")
+        c.execute("UPDATE seenMoves SET timesSeen = timesSeen + 1 WHERE pokemonName = '" + pokemonName + "' and move_name = '" + move +"';")
         conn.commit()
     conn.close()
 
-def addNewMove( moveName, pokemonName):
+def addNewMove( move_name, pokemonName):
     conn = sqlite3.connect(databasePath)
     c = conn.cursor()
     c.execute("SELECT timesSeen FROM seenMoves WHERE pokemonName = '" + pokemonName + "' LIMIT 1;")
@@ -49,14 +49,14 @@ def addNewMove( moveName, pokemonName):
     timesSeen = 0
     if len(result) != 0:
         timesSeen = int(str(result[0][0]))
-    if not moveExists(moveName, pokemonName, conn, c):
-        c.execute("INSERT INTO seenMoves (pokemonName, moveName, timesSeen, pokemonSeen) VALUES ('"+ pokemonName+"','"+ moveName+"',"+str(timesSeen)+", 0 )")
+    if not moveExists(move_name, pokemonName, conn, c):
+        c.execute("INSERT INTO seenMoves (pokemonName, move_name, timesSeen, pokemonSeen) VALUES ('"+ pokemonName+"','"+ move_name+"',"+str(timesSeen)+", 0 )")
         conn.commit()
     conn.close()
 
 
-def moveExists( moveName, pokemonName, conn, c):
-    c.execute("SELECT timesSeen FROM seenMoves WHERE moveName = '" + moveName + "' and pokemonName = '" + pokemonName + "'LIMIT 1;")
+def moveExists( move_name, pokemonName, conn, c):
+    c.execute("SELECT timesSeen FROM seenMoves WHERE move_name = '" + move_name + "' and pokemonName = '" + pokemonName + "'LIMIT 1;")
     if len(c.fetchall()) == 0:
         return False
     return True

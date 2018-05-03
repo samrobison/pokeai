@@ -5,7 +5,7 @@ from libs import *
 
 class Node:
 
-    def nullInit(self):
+    def null_init(self):
         ### Data ###
         self.parent = None
         self.children = []
@@ -29,7 +29,7 @@ class Node:
 
     # for after moves that pokemon do
     def __init__(self, par=None,  poke1=None, poke2=None, myMo=None, theirMo=None):
-        self.nullInit()
+        self.null_init()
         #go on if not the root node
         if par is not None:
             self.parent = par
@@ -64,10 +64,10 @@ class Node:
         self.myHp = self.parent.myHp - damageToMe
         self.theirHp = self.parent.theirHp - damageToThem
 
-        if self.myHp > self.myPokemon.getStat('hp'):
-            self.myHp = self.myPokemon.getStat('hp')
-        if self.theirHp > self.theirPokemon.getStat('hp'):
-            self.theirHp = self.theirPokemon.getStat('hp')
+        if self.myHp > self.myPokemon.get_stat('hp'):
+            self.myHp = self.myPokemon.get_stat('hp')
+        if self.theirHp > self.theirPokemon.get_stat('hp'):
+            self.theirHp = self.theirPokemon.get_stat('hp')
 
         reward = self.calcReward(self.myHp, self.theirHp)
         if reward > 0:
@@ -143,10 +143,10 @@ class Node:
     def statusDamage(self):
         damage = [0,0]
         if self.theyreSeeded:
-            damage[1] -= self.myPokemon.getStat('hp') * 0.12
-            damage[0] += self.theirPokemon.getStat('hp') * 0.12
+            damage[1] -= self.myPokemon.get_stat('hp') * 0.12
+            damage[0] += self.theirPokemon.get_stat('hp') * 0.12
         if self.theirStatus == 'Poison':
-            damage[0] += (self.theirPokemon.getStat('hp') * 0.12) * self.theirPoisonCount
+            damage[0] += (self.theirPokemon.get_stat('hp') * 0.12) * self.theirPoisonCount
             self.theirPoisonCount += 1
         return damage
 
@@ -161,7 +161,7 @@ class Node:
         #both of our health <= 0
         #TODO: understand priority and speed ties
         elif myHealth <= 0 and theirHealth <= 0:
-            if self.myPokemon.getStat('spe') >=  self.theirPokemon.getStat('spe'):
+            if self.myPokemon.get_stat('spe') >=  self.theirPokemon.get_stat('spe'):
                 reward = 999999
             else:
                 reward = -999999
@@ -169,7 +169,7 @@ class Node:
         elif self.myMove.name == 'Protect' and not self.theyreSeeded and self.theirStatus == '':
             reward == -999999
         else:
-            reward = (float(myHealth)/ float(self.myPokemon.getStat('hp'))) - (float(theirHealth)/ float(self.theirPokemon.getStat('hp')))
+            reward = (float(myHealth)/ float(self.myPokemon.get_stat('hp'))) - (float(theirHealth)/ float(self.theirPokemon.get_stat('hp')))
             reward = int(reward * 10000)
         return reward
 
@@ -229,18 +229,18 @@ class Tree:
             # print "depth: " + str(depth)
             #if we are not choosing a pokemon and its is a locking move/item
             theirViableMoves = self.viableMoves(node.theirPokemon, node.myPokemon)
-            if not node.isBattleRoot() and node.myPokemon.moveLocked and node.theirPokemon.moveLocked:
+            if not node.isBattleRoot() and node.myPokemon.move_locked and node.theirPokemon.move_locked:
                 if self.effectiveMove(node.myMove, node.theirMove, node.myPokemon, node.theirPokemon, node):
                     newNode = self.createNewNode(node, node.myMove, node.theirMove)
                     self.fillPath(newNode, depth + 1)
 
-            elif not node.isBattleRoot() and node.theirPokemon.moveLocked:
+            elif not node.isBattleRoot() and node.theirPokemon.move_locked:
                 for myMove in node.myPokemon.moves:
                     if self.effectiveMove(myMove, node.theirMove, node.myPokemon, node.theirPokemon, node):
                         newNode = self.createNewNode(node, myMove, node.theirMove)
                         self.fillPath(newNode, depth + 1)
 
-            elif not node.isBattleRoot() and node.myPokemon.moveLocked:
+            elif not node.isBattleRoot() and node.myPokemon.move_locked:
                 for theirMove in theirViableMoves:
                     if self.effectiveMove(node.myMove, theirMove, node.myPokemon, node.theirPokemon, node):
                         newNode = self.createNewNode(node, node.myMove, theirMove)
@@ -257,7 +257,7 @@ class Tree:
     def effectiveMove(self, myMove, theirMove, myPokemon, theirPokemon, node):
         effective = True
         if myMove.category == 'status':
-            effective = effective and (statusEffective(myMove, theirPokemon) or myMove.stallingMove)
+            effective = effective and (statusEffective(myMove, theirPokemon) or myMove.stalling_move)
             if (node.theyreSeeded and myMove.name == 'Leech Seed') or node.theirStatus != '' and myMove.name == 'Toxic':
                 return False
         else:
@@ -276,7 +276,7 @@ class Tree:
         maxDamagingMove = None
         for move in pokemon.moves:
             if move.category == 'Physical' or move.category == 'special':
-                damages = calcDamge(pokemon, otherPokemon, move, otherPokemon.getStat('hp'))
+                damages = calcDamge(pokemon, otherPokemon, move, otherPokemon.get_stat('hp'))
                 if damages[0] > maxdamage:
                     maxdamage = damages
                     maxDamagingMove = move
@@ -298,7 +298,7 @@ class Tree:
         #damage from my move to them
         if myMove.category == 'status':
             #stall move like proctect
-            if myMove.stallingMove:
+            if myMove.stalling_move:
                 if myMove.name == 'Protect':
                     newNode.damage(0,0)
                     return newNode
@@ -312,7 +312,7 @@ class Tree:
         #damage from their move to me
         if theirMove.category == 'Status':
             #stall move like proctect
-            if theirMove.stallingMove:
+            if theirMove.stalling_move:
                 if theirMove.name == 'Protect':
                     newNode.damage(0,0)
                     return newNode
@@ -370,7 +370,7 @@ class Tree:
         node.children = []
 
         # add move to enemy
-        node.theirPokemon.addMove(enemyMove)
+        node.theirPokemon.add_move(enemyMove)
 
         #reset status and health
         if not myMoveSuccessful:
@@ -380,8 +380,8 @@ class Tree:
         node.resetHealth()
 
         #add correct damage, make a method that predicts their stats off of this later
-        dam1 = node.myPokemon.getStat('hp') * (damageToMe/100.0)
-        dam2 = node.theirPokemon.getStat('hp') * (damageToThem/100)
+        dam1 = node.myPokemon.get_stat('hp') * (damageToMe/100.0)
+        dam2 = node.theirPokemon.get_stat('hp') * (damageToThem/100)
         node.damage(dam2, dam1)
 
         #rebranch

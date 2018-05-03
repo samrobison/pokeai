@@ -15,7 +15,7 @@ battleHistory = []
 theyMissed = 0
 iMissed = 0
 
-def openBrowser():
+def open_browser():
     #sign in and make team
     driver = webdriver.Chrome('chromedriver.exe')
     driver.get('http://play.pokemonshowdown.com/teambuilder');
@@ -23,13 +23,13 @@ def openBrowser():
     driver.find_element_by_name("backup").click()
     return driver
 
-def muteGame(driver):
+def mute_game(driver):
     driver.find_element_by_name('openSounds').click()
     time.sleep(2)
     driver.find_element_by_name('muted').click()
     time.sleep(1)
 
-def importTeam(fileName):
+def import_team(fileName):
     team = ""
     with open(fileName, 'r') as myFile:
         team=myFile.read()
@@ -46,7 +46,7 @@ def login(driver):
     driver.find_element_by_class_name("buttonbar").find_elements_by_tag_name("button")[0].click()
     time.sleep(1)
 
-def queueMatch(driver):
+def queue_match(driver):
     driver.get('http://play.pokemonshowdown.com')
     time.sleep(5)
 
@@ -66,25 +66,7 @@ def wait(driver, value, func):
     time.sleep(4)
     return 0
 
-def createEnemyPokemon(otherPokemon):
-    enemyPokemon = []
-    for p in otherPokemon:
-        name = nameFormat(str(p))
-        enemyPokemon.append(Pokemon(name))
-    return enemyPokemon
-
-def parseEnemyPokemon(driver):
-    chats = driver.find_elements_by_class_name('chat')
-    otherPokemon = []
-
-    for chat in chats:
-        if "team" in chat.text:
-            if username not in chat.text:
-                otherPokemon = chat.text.splitlines()[1].split('/')
-
-    return otherPokemon
-
-def selectPokemon(driver, pokemon):
+def select_pokemon(driver, pokemon):
     buttons = driver.find_element_by_class_name("switchmenu").find_elements_by_tag_name("button")
     for button in buttons:
         buttonName = nameFormat(button.text)
@@ -95,10 +77,10 @@ def selectPokemon(driver, pokemon):
 
     raise Exception("Failed to find button for " + pokemon)
 
-def turnOnTimer(driver):
+def turn_on_timer(driver):
     raiseNotDefined()
 
-def parseTheirChoice(driver):
+def parse_their_choice(driver):
     theirPick = ""
     for element in driver.find_elements_by_class_name('battle-history'):
         battleHistory.append(element.text)
@@ -109,7 +91,7 @@ def parseTheirChoice(driver):
             print(theirPick)
             return theirPick
 
-def lockInMove(driver, myMove):
+def lock_in_move(driver, myMove):
     over = wait(driver, 0, (lambda d, v: len(driver.find_elements_by_class_name("movecontrols")) == 0))
     if over < 0:
         return over
@@ -123,7 +105,7 @@ def lockInMove(driver, myMove):
         print((move.text))
     raise Exception("Failed to find button for " + myMove)
 
-def waitForNextTurn(driver, currentTurn):
+def wait_for_next_turn(driver, currentTurn):
     turn = currentTurn
     while turn == currentTurn:
         for header in driver.find_elements_by_css_selector('h2.battle-history'):
@@ -141,7 +123,7 @@ def waitForNextTurn(driver, currentTurn):
         print('waiting for enemy to select move')
         time.sleep(0.5)
 
-def getTurnInfo(driver, turn, enemyName):
+def get_turn_info(driver, turn, enemyName):
     global theyMissed
     global iMissed
     # def correctTree(self, enemyMove, damageToMe, damageToThem, myMoveSuccessful, theirMoveSuccessful):
@@ -150,14 +132,14 @@ def getTurnInfo(driver, turn, enemyName):
     for chat in driver.find_elements_by_css_selector('div.battle-history'):
         text = chat.text
         if 'opposing' in text:
-            info = parseHistory(text, iMissed)
+            info = parse_history(text, iMissed)
             turnInfo[0] = info[0] or turnInfo[0]
             turnInfo[2] = info[1] or turnInfo[2]
             turnInfo[3] = info[2] or turnInfo[3]
             if not (info[2] is not None or info[2]):
                 iMissed += 1
         else:
-            info = parseHistory(text, theyMissed)
+            info = parse_history(text, theyMissed)
             turnInfo[1] = info[1] or turnInfo[1]
             turnInfo[4] = info[2] or turnInfo[4]
             if not (info[2] is not None or info[2]):
@@ -165,7 +147,7 @@ def getTurnInfo(driver, turn, enemyName):
     print(turnInfo)
     return turnInfo
 
-def parseHistory(text, missedCount):
+def parse_history(text, missedCount):
     turnInfo = [None, None, None] #[move, damage, successful]
     if text not in battleHistory:
         avoided = 0
@@ -207,35 +189,42 @@ def parse_my_team(driver):
     battle_search = re.search('https://play.pokemonshowdown.com/(battle-gen7randombattle-\d+)', driver.current_url)
     battle_query = battle_search.group(1)
     pokemon = []
-    for i in range(5):
+    for i in range(6):
         driver.execute_script("let button = $('.disabled')[0]; BattleTooltips.showTooltipFor('%s',%s ,'sidepokemon', button, false)"% (battle_query, str(i)))
         # pokemon_info will have a string in the form of Manaphy L76HP: 100.0% (277/277)Ability: Hydration / Item: Choice Scarf157 Atk / 196 Def / 196 SpA / 196 SpD / 196 Spe• Energy Ball• Psychic• Surf• Ice Beam
         pokemon_info = driver.find_element_by_id('tooltipwrapper').text
         print(pokemon_info)
-        #TODO: parse string and make pokemon object out of it
-        pokemon.append(pokemon_info)
+        pokemon.append(Pokemon(my_init_string=pokemon_info))
+    return pokemon
 
-    return pokemon_info
+def parse_enemy_pokemon(driver):
+    battle_search = re.search('https://play.pokemonshowdown.com/(battle-gen7randombattle-\d+)', driver.current_url)
+    battle_query = battle_search.group(1)
+    driver.execute_script("let button = $('.disabled')[0]; BattleTooltips.showTooltipFor('%s', 'your0','pokemon', button, false)"% (battle_query))
+    pokemon_info = driver.find_element_by_id('tooltipwrapper').text
+    print(pokemon_info)
+    return []
 
+def create_enemy_pokemon(names):
+    return names
 
 def battle(driver):
-    myPokemon = parse_my_team(driver)
+    my_pokemon = parse_my_team(driver)
     #get opponent's pokemon
-    enemyNames = parseEnemyPokemon(driver)
-    enemyPokemon = createEnemyPokemon(enemyNames)
+    enemy_names = parse_enemy_pokemon(driver)
+    enemy_pokemon = create_enemy_pokemon(enemy_names)
 
-    tree = Tree(myPokemon, enemyPokemon)
-    myChoice =  tree.choosePokemon()
+    tree = Tree(my_pokemon, enemy_pokemon)
+    my_choice =  tree.choosePokemon()
 
-    selectPokemon(driver, myChoice)
+    select_pokemon(driver, my_choice)
     # wait(driver, 0, (lambda d, v: len(d.find_elements_by_class_name('battle-history')) == v))
-
     turn = 0
-    turn = waitForNextTurn(driver, turn)
+    turn = wait_for_next_turn(driver, turn)
     print(turn)
     if turn > 0:
-        theirChoice = parseTheirChoice(driver)
-        tree.findRootForPicked(myChoice, theirChoice)
+        their_choice = parse_their_choice(driver)
+        tree.findRootForPicked(my_choice, their_choice)
         message(driver, 'Hello! I am PokeAi Version 0.1.8, Thanks for training me! \nNew this version: MDP rewards for protect modified\n')
 
     while turn > 0:
@@ -243,11 +232,11 @@ def battle(driver):
         move = tree.getNextMove()
         if  move[1] <= 0:
             message(driver, "This is awkward looks like i can't win\n")
-        lock = lockInMove(driver, move[0])
-        turn = waitForNextTurn(driver, turn)
+        lock = lock_in_move(driver, move[0])
+        turn = wait_for_next_turn(driver, turn)
 
         try:
-            info = getTurnInfo(driver, turn - 1, theirChoice)
+            info = get_turn_info(driver, turn - 1, their_choice)
             tree.correctTree(info[0], info[1], info[2], info[3], info[4])
         except:
             tb = traceback.format_exc()
@@ -260,7 +249,7 @@ def battle(driver):
             return turn
 
 
-def afterBattle(driver):
+def after_battle(driver):
     time.sleep(20)
     driver.close()
 
@@ -269,38 +258,24 @@ def main():
     initDb()
     treeTest = False
     if treeTest:
-        pokeText = importTeam('team1.txt')
-        # myPokemon = parseTeam(pokeText)
-        # enemyNames = ["venusaur", "tapukoko", "greninja"]
-        # enemyPokemon = createEnemyPokemon(enemyNames)
-        # tree = Tree(myPokemon, enemyPokemon)
-        # choice =  tree.choosePokemon()
-        # from random import randint
-        # # randomChoice = enemyNames[randint(0,2)]
-        # randomChoice = enemyNames[2]
-        # print(("Enemy chose: " + randomChoice))
-        # tree.findRootForPicked(choice, randomChoice)
-        # tree.getNextMove()
-        # # def correctTree(self, enemyMove, damageToMe, damageToThem, myMoveSuccessful, theirMoveSuccessful):
-        # tree.correctTree('fusionbolt', 70.0, 0, False, True)
-        # tree.getNextMove()
+        raiseNotDefined()
     else:
-        driver = openBrowser()
-        muteGame(driver)
+        driver = open_browser()
+        mute_game(driver)
         try:
             login(driver)
             for i in range(3):
-                battleHistory = []
-                url = queueMatch(driver)
+                battle_history = []
+                url = queue_match(driver)
                 wait(driver, url, (lambda d, u: u == d.current_url))
                 battle(driver)
-            afterBattle(driver)
+            after_battle(driver)
         except:
             tb = traceback.format_exc()
             print(tb)
             message(driver, 'Congratulations! You made me crash somehow. Take a look:')
             message(driver, tb.replace('sam', 'someCoder'))
-            afterBattle(driver)
+            after_battle(driver)
 
 
 if __name__ == "__main__": main()
