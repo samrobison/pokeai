@@ -147,9 +147,20 @@ def _opp_threat_moves(pokemon: AIPokemon) -> List[AIMove]:
     return moves if moves else [_phantom_move(pokemon)]
 
 
-def _best_damage(attacker: AIPokemon, defender: AIPokemon) -> float:
+def _best_damage(
+    attacker: AIPokemon,
+    defender: AIPokemon,
+    atk_boosts: Optional[dict] = None,
+    def_boosts: Optional[dict] = None,
+) -> float:
     """Max damage attacker can deal — used for force-switch scoring."""
-    return max((_apply_damage(attacker, defender, m) for m in _opp_threat_moves(attacker)), default=0.0)
+    atk_boosts = atk_boosts or {}
+    def_boosts = def_boosts or {}
+    best = 0.0
+    for m in _opp_threat_moves(attacker):
+        a_s, d_s = _boost_stages(m, atk_boosts, def_boosts)
+        best = max(best, _apply_damage(attacker, defender, m, a_s, d_s))
+    return best
 
 
 # ---------------------------------------------------------------------------
@@ -170,20 +181,26 @@ def _maximin(
     alpha: float = float('-inf'),
     my_boosts: Optional[dict] = None,
     consecutive_boosts: int = 0,
+    opp_boosts: Optional[dict] = None,
 ) -> Tuple[float, Optional[Action]]:
     my_boosts = my_boosts or {}
+    # Opponent's standing boosts (offensive AND defensive). We don't model the
+    # opponent boosting further inside the tree, so this stays constant — but it
+    # makes our damage reflect their Iron Defense / Calm Mind, and their damage
+    # reflect their Swords Dance / Nasty Plot.
+    opp_boosts = opp_boosts or {}
     my_max = my_poke.stats['hp']
     opp_max = opp_poke.stats['hp']
 
     if depth == 0 or my_hp <= 0 or opp_hp <= 0:
         return _eval(my_poke, my_hp, my_max, opp_hp, opp_max, my_boosts), None
 
-    # Opponent moves sorted best-first for early cutoffs (no boost tracking for opp yet)
-    opp_moves = sorted(
-        _opp_threat_moves(opp_poke),
-        key=lambda m: _apply_damage(opp_poke, my_poke, m),
-        reverse=True,
-    )
+    # Opponent moves sorted best-first for early cutoffs (factor their atk boosts)
+    def _opp_dmg_for_sort(m: AIMove) -> float:
+        a_s, d_s = _boost_stages(m, opp_boosts, my_boosts)
+        return _apply_damage(opp_poke, my_poke, m, a_s, d_s)
+
+    opp_moves = sorted(_opp_threat_moves(opp_poke), key=_opp_dmg_for_sort, reverse=True)
 
     best_score = float('-inf')
     best_action: Optional[Action] = None
@@ -191,7 +208,7 @@ def _maximin(
     # Sort our moves: damaging moves by expected damage first, boost moves last
     def _move_priority(m: AIMove) -> float:
         if m.power > 0:
-            atk_s, def_s = _boost_stages(m, my_boosts, {})
+            atk_s, def_s = _boost_stages(m, my_boosts, opp_boosts)
             return _apply_damage(my_poke, opp_poke, m, atk_s, def_s)
         return -1.0  # boost moves sorted after damaging moves
 
@@ -214,13 +231,14 @@ def _maximin(
             # with a self-debuff still hits at full power this turn — the debuff
             # only bites on subsequent turns).
             if my_move.power > 0:
-                atk_s, def_s = _boost_stages(my_move, my_boosts, {})
+                # Our damage uses our offensive boosts AND the opponent's defensive boosts.
+                atk_s, def_s = _boost_stages(my_move, my_boosts, opp_boosts)
                 my_dmg = _apply_damage(my_poke, opp_poke, my_move, atk_s, def_s)
             else:
                 my_dmg = 0.0
 
-            # Damage opponent deals to us (uses our current def/spd boosts)
-            opp_atk_s, my_def_s = _boost_stages(opp_move, {}, my_boosts)
+            # Opponent's damage uses their offensive boosts AND our defensive boosts.
+            opp_atk_s, my_def_s = _boost_stages(opp_move, opp_boosts, my_boosts)
             opp_dmg = _apply_damage(opp_poke, my_poke, opp_move, opp_atk_s, my_def_s)
 
             # Our self-boosts apply from next turn onward (e.g. Draco Meteor drops
@@ -235,6 +253,7 @@ def _maximin(
                 alpha=alpha,
                 my_boosts=next_boosts,
                 consecutive_boosts=next_consec,
+                opp_boosts=opp_boosts,
             )
             if score < worst:
                 worst = score
@@ -253,7 +272,9 @@ def _maximin(
         worst = float('inf')
         for opp_move in opp_moves:
             # We deal 0 damage this turn; opponent attacks the incoming pokemon
-            opp_dmg = _apply_damage(opp_poke, bench_poke, opp_move)
+            # (incoming has no boosts yet; opponent keeps their offensive boosts).
+            opp_atk_s, _ = _boost_stages(opp_move, opp_boosts, {})
+            opp_dmg = _apply_damage(opp_poke, bench_poke, opp_move, opp_atk_s, 0)
             new_bench_hp = max(0.0, bench_hp - opp_dmg)
 
             # Remaining bench after we switch in bench_poke
@@ -268,6 +289,7 @@ def _maximin(
                 alpha=alpha,
                 my_boosts={},          # boosts reset on switch
                 consecutive_boosts=0,  # switching breaks the setup chain
+                opp_boosts=opp_boosts,  # opponent's boosts persist when we switch
             )
             if score < worst:
                 worst = score
@@ -288,15 +310,20 @@ def _maximin(
 # Force-switch scoring (no search needed — just pick the best incoming pokemon)
 # ---------------------------------------------------------------------------
 
-def score_switch_in(candidate: AIPokemon, opp: AIPokemon) -> float:
+def score_switch_in(candidate: AIPokemon, opp: AIPokemon,
+                    opp_boosts: Optional[dict] = None) -> float:
     """
     Score a candidate pokemon to send in against opp.
     Higher = better. Combines:
       - bulk against opp's best attack (how many hits can we take)
       - damage we can deal to opp (can we threaten a KO)
+
+    opp_boosts factors in the opponent's standing boosts: their offensive boosts
+    raise the damage we'd take, their defensive boosts lower the damage we'd deal.
     """
-    incoming_dmg = _best_damage(opp, candidate)
-    outgoing_dmg = _best_damage(candidate, opp)
+    opp_boosts = opp_boosts or {}
+    incoming_dmg = _best_damage(opp, candidate, atk_boosts=opp_boosts)
+    outgoing_dmg = _best_damage(candidate, opp, def_boosts=opp_boosts)
 
     hits_to_ko_us   = candidate.stats['hp'] / (incoming_dmg + 1)
     pct_dmg_to_opp  = outgoing_dmg / (opp.stats['hp'] + 1)
@@ -352,12 +379,14 @@ def choose_best_move(battle, depth: int = DEFAULT_DEPTH, consecutive_boosts: int
         opp_hp = float(opp_env.current_hp_fraction * opp_poke.stats['hp'])
 
         # Seed with current boosts so the search starts from real battle state
-        current_boosts = {k: v for k, v in my_env.boosts.items()
-                          if k in ('atk', 'def', 'spa', 'spd', 'spe')}
+        stat_keys = ('atk', 'def', 'spa', 'spd', 'spe')
+        current_boosts = {k: v for k, v in my_env.boosts.items() if k in stat_keys}
+        opp_current_boosts = {k: v for k, v in opp_env.boosts.items() if k in stat_keys}
 
         _, best_action = _maximin(my_poke, opp_poke, my_hp, opp_hp, depth, bench,
                                   my_boosts=current_boosts,
-                                  consecutive_boosts=consecutive_boosts)
+                                  consecutive_boosts=consecutive_boosts,
+                                  opp_boosts=opp_current_boosts)
 
         if best_action is None:
             return None
@@ -391,10 +420,12 @@ def choose_best_switch(battle) -> Optional[object]:
 
     try:
         opp_poke = pokemon_from_env(opp_env, use_max_stats=True)
+        opp_boosts = {k: v for k, v in opp_env.boosts.items()
+                      if k in ('atk', 'def', 'spa', 'spd', 'spe')}
         best_env, best_score = None, float('-inf')
         for env_sw in battle.available_switches:
             candidate = pokemon_from_env(env_sw)
-            s = score_switch_in(candidate, opp_poke)
+            s = score_switch_in(candidate, opp_poke, opp_boosts=opp_boosts)
             if s > best_score:
                 best_score, best_env = s, env_sw
         return best_env
