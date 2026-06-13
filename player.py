@@ -67,16 +67,28 @@ async def main():
                         help="Accept incoming challenges. Optionally restrict to a username; "
                              "omit the username to accept from anyone.")
     parser.add_argument("--depth", type=int, default=4, help="Minimax search depth (default: 4)")
+    timer = parser.add_mutually_exclusive_group()
+    timer.add_argument("--timer", dest="timer", action="store_true",
+                       help="Force the battle timer on (default: on for ladder, off for challenges)")
+    timer.add_argument("--no-timer", dest="timer", action="store_false",
+                       help="Force the battle timer off")
+    parser.set_defaults(timer=None)
     args = parser.parse_args()
 
     initDb()
+
+    # Default: timer on for ladder/accept, off for friendly challenges.
+    if args.timer is None:
+        start_timer = not args.challenge
+    else:
+        start_timer = args.timer
 
     player = MinimaxPlayer(
         account_configuration=AccountConfiguration(username, password),
         server_configuration=ShowdownServerConfiguration,
         battle_format="gen9randombattle",
         minimax_depth=args.depth,
-        start_timer_on_battle_start=True,
+        start_timer_on_battle_start=start_timer,
     )
 
     if args.challenge:
