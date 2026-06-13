@@ -1,5 +1,4 @@
 import asyncio
-import sys
 
 from poke_env import AccountConfiguration, ShowdownServerConfiguration
 from poke_env.player import Player
@@ -55,7 +54,20 @@ class MinimaxPlayer(Player):
 
 
 async def main():
+    import argparse
+
     from userinfo import username, password
+
+    parser = argparse.ArgumentParser(description="Run the minimax agent on Pokemon Showdown")
+    parser.add_argument("n", nargs="?", type=int, default=1,
+                        help="Number of battles to play (default: 1)")
+    parser.add_argument("--challenge", metavar="USER",
+                        help="Challenge a specific player by username instead of laddering")
+    parser.add_argument("--accept", metavar="USER", nargs="?", const="",
+                        help="Accept incoming challenges. Optionally restrict to a username; "
+                             "omit the username to accept from anyone.")
+    parser.add_argument("--depth", type=int, default=4, help="Minimax search depth (default: 4)")
+    args = parser.parse_args()
 
     initDb()
 
@@ -63,13 +75,22 @@ async def main():
         account_configuration=AccountConfiguration(username, password),
         server_configuration=ShowdownServerConfiguration,
         battle_format="gen9randombattle",
-        minimax_depth=4,
+        minimax_depth=args.depth,
         start_timer_on_battle_start=True,
     )
 
-    n = int(sys.argv[1]) if len(sys.argv) > 1 else 1
-    print(f"Queuing for {n} game(s) as {username} on gen9randombattle ladder...")
-    await player.ladder(n)
+    if args.challenge:
+        print(f"Challenging {args.challenge} to {args.n} game(s) as {username}...")
+        await player.send_challenges(args.challenge, n_challenges=args.n)
+    elif args.accept is not None:
+        opponent = args.accept or None  # "" -> None means accept from anyone
+        who = opponent if opponent else "anyone"
+        print(f"Waiting to accept {args.n} challenge(s) from {who} as {username}...")
+        await player.accept_challenges(opponent, n_challenges=args.n)
+    else:
+        print(f"Queuing for {args.n} game(s) as {username} on gen9randombattle ladder...")
+        await player.ladder(args.n)
+
     print(f"Done. Results: {player.n_won_battles}W / {player.n_lost_battles}L")
     print(f"Game states logged to: {LOG_PATH}")
 
