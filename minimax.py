@@ -89,11 +89,18 @@ def _phantom_move(pokemon: AIPokemon) -> AIMove:
     return AIMove(move_hash)
 
 
+def _has_positive_boost(move: AIMove) -> bool:
+    return (
+        isinstance(move.boosts, dict)
+        and any(v > 0 for v in move.boosts.values())
+    )
+
+
 def _viable_moves(pokemon: AIPokemon) -> List[AIMove]:
-    """Our moves: damaging moves plus moves that apply stat boosts."""
+    """Our moves: damaging moves plus pure status moves that buff us."""
     moves = [
         m for m in pokemon.moves
-        if m.category and (m.power > 0 or isinstance(m.boosts, dict) and m.boosts)
+        if m.category and (m.power > 0 or _has_positive_boost(m))
     ]
     return moves if moves else (pokemon.moves or [AIMove(None)])
 
@@ -157,23 +164,28 @@ def _maximin(
     my_move_options = sorted(_viable_moves(my_poke), key=_move_priority, reverse=True)
 
     for my_move in my_move_options:
-        is_boost_move = isinstance(my_move.boosts, dict) and my_move.boosts
+        # Stat changes this move applies to US (can be positive like Swords Dance
+        # or negative like Draco Meteor's -2 SpA). Always a dict here, possibly empty.
+        self_boosts = my_move.boosts if isinstance(my_move.boosts, dict) else {}
 
         worst = float('inf')
         for opp_move in opp_moves:
-            # Damage we deal this turn (0 if we're boosting)
-            if is_boost_move:
-                my_dmg = 0.0
-            else:
+            # Damage we deal this turn, using our CURRENT boosts (a damaging move
+            # with a self-debuff still hits at full power this turn — the debuff
+            # only bites on subsequent turns).
+            if my_move.power > 0:
                 atk_s, def_s = _boost_stages(my_move, my_boosts, {})
                 my_dmg = _apply_damage(my_poke, opp_poke, my_move, atk_s, def_s)
+            else:
+                my_dmg = 0.0
 
             # Damage opponent deals to us (uses our current def/spd boosts)
             opp_atk_s, my_def_s = _boost_stages(opp_move, {}, my_boosts)
             opp_dmg = _apply_damage(opp_poke, my_poke, opp_move, opp_atk_s, my_def_s)
 
-            # Boosts apply from next turn onward
-            next_boosts = _apply_boosts(my_boosts, my_move.boosts) if is_boost_move else my_boosts
+            # Our self-boosts apply from next turn onward (e.g. Draco Meteor drops
+            # our SpA, so the next Draco / special move is weaker in the subtree).
+            next_boosts = _apply_boosts(my_boosts, self_boosts) if self_boosts else my_boosts
 
             score, _ = _maximin(
                 my_poke, opp_poke,

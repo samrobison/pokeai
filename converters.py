@@ -1,6 +1,7 @@
 """Convert poke-env battle objects to our internal Pokemon/Move types."""
 
 from poke_env.battle import MoveCategory
+from poke_env.battle.move import Target
 
 from libs import nameFormat
 from Pokemon import Move as AIMove, Pokemon as AIPokemon
@@ -10,6 +11,32 @@ CATEGORY_MAP = {
     MoveCategory.SPECIAL: 'special',
     MoveCategory.STATUS: 'status',
 }
+
+
+def _self_boosts(env_move) -> dict:
+    """
+    Stat-stage changes that land on the *user* of the move.
+
+    Combines:
+      - env_move.self_boost : self-effect of damaging moves
+                              (Draco Meteor -2 SpA, Close Combat -1 Def/-1 SpD, ...)
+      - env_move.boosts     : only when the move targets SELF
+                              (Swords Dance +2 Atk, Nasty Plot +2 SpA, ...)
+
+    Opponent-targeting stat moves (Growl, Charm) are intentionally excluded —
+    they affect the opponent, which the search does not yet model on their side.
+    """
+    boosts: dict = {}
+
+    if env_move.self_boost:
+        for stat, amount in env_move.self_boost.items():
+            boosts[stat] = boosts.get(stat, 0) + amount
+
+    if env_move.boosts and env_move.target == Target.SELF:
+        for stat, amount in env_move.boosts.items():
+            boosts[stat] = boosts.get(stat, 0) + amount
+
+    return boosts
 
 
 def move_from_env(env_move):
@@ -22,6 +49,7 @@ def move_from_env(env_move):
         'category': CATEGORY_MAP.get(env_move.category, 'status'),
         'pp': env_move.max_pp,
         'priority': env_move.priority,
+        'boosts': _self_boosts(env_move),  # stat changes applied to the user
     }
     return AIMove(move_hash)
 
