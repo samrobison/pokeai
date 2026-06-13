@@ -2,7 +2,6 @@ from libs import *
 from movedex import MoveDex
 from database import *
 from pokedex import Pokedex
-import re
 
 class Move:
     def null_init(self):
@@ -56,11 +55,8 @@ class Pokemon:
 
 
     ### Methods ###
-    def __init__(self, my_init_string=None, name=None, abil=None, moves=None, stat=None, item_held=None):
+    def __init__(self, name=None, abil=None, moves=None, stat=None, item_held=None):
         self.null_init()
-        if my_init_string is not None:
-            self.my_from_string(my_init_string)
-            return 
         pokemon = Pokedex[name]
         self.name = name
         self.level = 100
@@ -92,37 +88,6 @@ class Pokemon:
                     if move[1] in MoveDex:
                         self.moves.append( Move(MoveDex[str(move[1])]) )
     
-    def my_from_string(self, string):
-        parsed = re.search("((?:[\\w-]+\\s?){1,2})(?:\\([\\w\\s-]+\\))?\\sL(\\d+)\\nHP:\\s100\\.0%\\s\\((\\d+)\\/+\\d+\\)\\nAbility:\\s([\\w\\s-]+)\\/\\sItem:\\s([\\w\\s]+)\\n(\\d+)\\s\\w+\\s\\/\\s(\\d+)\\s\\w+\\s\\/\\s(\\d+)\\s\\w+\\s\\/\\s(\\d+)\\s\\w+\\s\\/\\s(\\d+)\\s\\w+\\n..(['\\w\\s-]+)\\n..(['\\w\\s-]+)\\n..(['\\w\\s-]+)\\n..(['\\w\\s]+)", string)
-        groups = parsed.groups()
-        self.name = groups[0]
-        self.level = groups[1]
-        self.hp = groups[2]
-        self.ability = groups[3]
-        self.item = groups[4]
-        self.stats = {
-            'hp': self.hp,
-            'atk':groups[5], 
-            'defe': groups[6],
-            'spa': groups[7],
-            'spd': groups[8], 
-            'spe': groups[9],
-        }
-        self.add_move(groups[10])
-        self.add_move(groups[11])
-        self.add_move(groups[12])
-        self.add_move(groups[13])
-        self.data = Pokedex[self.name.lower()]['baseStats']
-
-
-    def theirs_from_string(self, string):
-        parsed = re.search("((?:[\\w]+\\s?){1,2})(?:\\([\\w\\s-]+\\))?\\sL(\\d+)\\nHP:\\s100%\\n(?:Ability|Possible abilities):\\s(?:[,\\w\\s-]+)\\n(\\d+)\\sto\\s(\\d+)", string)
-        groups = parsed.groups()
-        self.name = groups[0]
-        self.level = groups[1]
-        self.data = Pokedex[self.name.lower()]['baseStats']
-        self.stats = self.max_stats()
-
     def add_move(self, move_name):
         if move_name in MoveDex:
             self.moves.append( Move(MoveDex[move_name]) )

@@ -2,3 +2,4 @@ pokeAI/
 *.pyc
 chromedriver
 userinfo.py
+battles.jsonl
