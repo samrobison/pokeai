@@ -5,7 +5,21 @@ from poke_env.player import Player
 
 from database import initDb
 from game_logger import LOG_PATH, build_state, log_state
-from minimax import choose_best_move, choose_best_switch
+from minimax import MAX_CONSECUTIVE_BOOSTS, choose_best_move, choose_best_switch
+
+
+def _is_setup_env_move(env_move) -> bool:
+    """A 0-power move that raises one of the user's own stats (Swords Dance, etc.)."""
+    from poke_env.battle.move import Target
+    if env_move.base_power:
+        return False
+
+    def has_positive(d):
+        return bool(d) and any(v > 0 for v in d.values())
+
+    return has_positive(env_move.self_boost) or (
+        has_positive(env_move.boosts) and env_move.target == Target.SELF
+    )
 
 
 class MinimaxPlayer(Player):
@@ -14,11 +28,16 @@ class MinimaxPlayer(Player):
         super().__init__(*args, **kwargs)
         self._announced = set()
         self.minimax_depth = minimax_depth
+        # How many setup moves we've used in a row, per battle.
+        self._consec_boosts = {}
 
     def choose_move(self, battle):
         if battle.battle_tag not in self._announced:
             self._announced.add(battle.battle_tag)
             print(f"Battle started: https://play.pokemonshowdown.com/{battle.battle_tag}")
+
+        prior_boosts = self._consec_boosts.get(battle.battle_tag, 0)
+        chose_setup = False
 
         if battle.force_switch:
             env_pokemon = choose_best_switch(battle)
@@ -29,14 +48,25 @@ class MinimaxPlayer(Player):
                 order = self.choose_random_move(battle)
                 print(f"  Turn {battle.turn}: switch fell back to random")
         else:
-            env_action = choose_best_move(battle, depth=self.minimax_depth)
+            env_action = choose_best_move(
+                battle, depth=self.minimax_depth, consecutive_boosts=prior_boosts
+            )
             if env_action is not None:
                 order = self.create_order(env_action)
                 label = getattr(env_action, 'id', None) or getattr(env_action, 'species', '?')
-                print(f"  Turn {battle.turn}: minimax chose {label}")
+                from poke_env.battle.move import Move as EnvMove
+                if isinstance(env_action, EnvMove) and _is_setup_env_move(env_action):
+                    chose_setup = True
+                    print(f"  Turn {battle.turn}: minimax chose {label} "
+                          f"(setup {prior_boosts + 1}/{MAX_CONSECUTIVE_BOOSTS})")
+                else:
+                    print(f"  Turn {battle.turn}: minimax chose {label}")
             else:
                 order = self.choose_random_move(battle)
                 print(f"  Turn {battle.turn}: minimax fell back to random")
+
+        # Update the consecutive-setup counter: increment on setup, else reset.
+        self._consec_boosts[battle.battle_tag] = prior_boosts + 1 if chose_setup else 0
 
         # Resolve action for logging
         from poke_env.battle.move import Move as EnvMove

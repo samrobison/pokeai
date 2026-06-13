@@ -23,17 +23,28 @@ DEFAULT_DEPTH = 8
 # Represents the opportunity cost of not attacking this turn.
 SWITCH_COST = 0.12
 
-# HP-fraction-equivalent value of one net offensive stat stage at the leaf.
+# HP-fraction-equivalent value of one offensive stat stage at the leaf.
 # Gives standing boosts positional value so the search will invest a turn in
 # setup even before it has cashed the boost in as damage. Tunable.
 BOOST_VALUE = 0.05
+
+# Hardest cap on how many setup (pure stat-boost) moves may be used in a row.
+# Once this many boosts have been chained, the search will not consider another
+# setup move and must attack or switch instead.
+MAX_CONSECUTIVE_BOOSTS = 2
 
 
 # ---------------------------------------------------------------------------
 # Low-level helpers
 # ---------------------------------------------------------------------------
 
+def _primary_attack_stat(pokemon: AIPokemon) -> str:
+    """Whether this pokemon attacks mainly off Attack or Special Attack."""
+    return 'atk' if pokemon.data.get('atk', 0) >= pokemon.data.get('spa', 0) else 'spa'
+
+
 def _eval(
+    my_poke: AIPokemon,
     my_hp: float,
     my_max: float,
     opp_hp: float,
@@ -42,14 +53,10 @@ def _eval(
 ) -> float:
     score = (my_hp / my_max) - (opp_hp / opp_max)
     if my_boosts and my_hp > 0:
-        # Credit standing offensive boosts, scaled by HP fraction: a +6 sweeper
-        # at 5% HP can't cash its boosts in, so it gets little credit.
-        offensive = (
-            my_boosts.get('atk', 0)
-            + my_boosts.get('spa', 0)
-            + 0.5 * my_boosts.get('spe', 0)
-        )
-        score += BOOST_VALUE * offensive * (my_hp / my_max)
+        # Only credit the pokemon's primary attacking stat (atk OR spa), scaled
+        # by HP fraction: a +6 sweeper at 5% HP can't cash its boosts in.
+        stat = _primary_attack_stat(my_poke)
+        score += BOOST_VALUE * my_boosts.get(stat, 0) * (my_hp / my_max)
     return score
 
 
@@ -117,6 +124,11 @@ def _has_positive_boost(move: AIMove) -> bool:
     )
 
 
+def _is_setup_move(move: AIMove) -> bool:
+    """A pure stat-boost move: deals no damage and raises one of our stats."""
+    return move.power == 0 and _has_positive_boost(move)
+
+
 def _viable_moves(pokemon: AIPokemon) -> List[AIMove]:
     """Our moves: damaging moves plus pure status moves that buff us."""
     moves = [
@@ -157,13 +169,14 @@ def _maximin(
     my_bench: List[Tuple[AIPokemon, float]],
     alpha: float = float('-inf'),
     my_boosts: Optional[dict] = None,
+    consecutive_boosts: int = 0,
 ) -> Tuple[float, Optional[Action]]:
     my_boosts = my_boosts or {}
     my_max = my_poke.stats['hp']
     opp_max = opp_poke.stats['hp']
 
     if depth == 0 or my_hp <= 0 or opp_hp <= 0:
-        return _eval(my_hp, my_max, opp_hp, opp_max, my_boosts), None
+        return _eval(my_poke, my_hp, my_max, opp_hp, opp_max, my_boosts), None
 
     # Opponent moves sorted best-first for early cutoffs (no boost tracking for opp yet)
     opp_moves = sorted(
@@ -188,6 +201,12 @@ def _maximin(
         # Stat changes this move applies to US (can be positive like Swords Dance
         # or negative like Draco Meteor's -2 SpA). Always a dict here, possibly empty.
         self_boosts = my_move.boosts if isinstance(my_move.boosts, dict) else {}
+
+        # Enforce the hard cap on chained setup moves.
+        is_setup = _is_setup_move(my_move)
+        if is_setup and consecutive_boosts >= MAX_CONSECUTIVE_BOOSTS:
+            continue
+        next_consec = consecutive_boosts + 1 if is_setup else 0
 
         worst = float('inf')
         for opp_move in opp_moves:
@@ -215,6 +234,7 @@ def _maximin(
                 depth - 1, my_bench,
                 alpha=alpha,
                 my_boosts=next_boosts,
+                consecutive_boosts=next_consec,
             )
             if score < worst:
                 worst = score
@@ -246,7 +266,8 @@ def _maximin(
                 new_bench_hp, opp_hp,
                 depth - 1, new_bench,
                 alpha=alpha,
-                my_boosts={},  # boosts reset on switch
+                my_boosts={},          # boosts reset on switch
+                consecutive_boosts=0,  # switching breaks the setup chain
             )
             if score < worst:
                 worst = score
@@ -287,9 +308,13 @@ def score_switch_in(candidate: AIPokemon, opp: AIPokemon) -> float:
 # Public API
 # ---------------------------------------------------------------------------
 
-def choose_best_move(battle, depth: int = DEFAULT_DEPTH):
+def choose_best_move(battle, depth: int = DEFAULT_DEPTH, consecutive_boosts: int = 0):
     """
     Run maximin search over moves AND switches.
+
+    consecutive_boosts is how many setup moves we've already used in a row this
+    battle; the search refuses to plan more than MAX_CONSECUTIVE_BOOSTS in total.
+
     Returns a poke-env Move or Pokemon order object, or None on failure.
     """
     from converters import move_from_env, pokemon_from_env
@@ -331,7 +356,8 @@ def choose_best_move(battle, depth: int = DEFAULT_DEPTH):
                           if k in ('atk', 'def', 'spa', 'spd', 'spe')}
 
         _, best_action = _maximin(my_poke, opp_poke, my_hp, opp_hp, depth, bench,
-                                  my_boosts=current_boosts)
+                                  my_boosts=current_boosts,
+                                  consecutive_boosts=consecutive_boosts)
 
         if best_action is None:
             return None
