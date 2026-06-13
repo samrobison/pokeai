@@ -63,7 +63,7 @@ async def main():
         account_configuration=AccountConfiguration(username, password),
         server_configuration=ShowdownServerConfiguration,
         battle_format="gen9randombattle",
-        minimax_depth=2,
+        minimax_depth=4,
         start_timer_on_battle_start=True,
     )
 

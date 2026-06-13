@@ -23,13 +23,34 @@ DEFAULT_DEPTH = 8
 # Represents the opportunity cost of not attacking this turn.
 SWITCH_COST = 0.12
 
+# HP-fraction-equivalent value of one net offensive stat stage at the leaf.
+# Gives standing boosts positional value so the search will invest a turn in
+# setup even before it has cashed the boost in as damage. Tunable.
+BOOST_VALUE = 0.05
+
 
 # ---------------------------------------------------------------------------
 # Low-level helpers
 # ---------------------------------------------------------------------------
 
-def _eval(my_hp: float, my_max: float, opp_hp: float, opp_max: float) -> float:
-    return (my_hp / my_max) - (opp_hp / opp_max)
+def _eval(
+    my_hp: float,
+    my_max: float,
+    opp_hp: float,
+    opp_max: float,
+    my_boosts: Optional[dict] = None,
+) -> float:
+    score = (my_hp / my_max) - (opp_hp / opp_max)
+    if my_boosts and my_hp > 0:
+        # Credit standing offensive boosts, scaled by HP fraction: a +6 sweeper
+        # at 5% HP can't cash its boosts in, so it gets little credit.
+        offensive = (
+            my_boosts.get('atk', 0)
+            + my_boosts.get('spa', 0)
+            + 0.5 * my_boosts.get('spe', 0)
+        )
+        score += BOOST_VALUE * offensive * (my_hp / my_max)
+    return score
 
 
 def _stage_mult(stage: int) -> float:
@@ -142,7 +163,7 @@ def _maximin(
     opp_max = opp_poke.stats['hp']
 
     if depth == 0 or my_hp <= 0 or opp_hp <= 0:
-        return _eval(my_hp, my_max, opp_hp, opp_max), None
+        return _eval(my_hp, my_max, opp_hp, opp_max, my_boosts), None
 
     # Opponent moves sorted best-first for early cutoffs (no boost tracking for opp yet)
     opp_moves = sorted(
