@@ -3,3 +3,6 @@ pokeAI/
 chromedriver
 userinfo.py
 battles.jsonl
+model.pt
+*.pt
+__pycache__/

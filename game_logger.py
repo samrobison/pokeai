@@ -87,6 +87,18 @@ def _encode_opponent(pokemon: Pokemon) -> dict:
     }
 
 
+def _encode_bench_pokemon(pokemon: Pokemon) -> dict:
+    """Full detail for a non-active team member (bench slot)."""
+    return {
+        "species":     pokemon.species,
+        "hp_fraction": round(pokemon.current_hp_fraction, 4),
+        "status":      pokemon.status.name if pokemon.status else None,
+        "type":        _type_names(pokemon),
+        "base_stats":  dict(pokemon.base_stats),
+        "fainted":     pokemon.fainted,
+    }
+
+
 def _encode_available_moves(battle) -> list:
     opp = battle.opponent_active_pokemon
     result = []
@@ -106,23 +118,37 @@ def _encode_available_moves(battle) -> list:
 
 
 def build_state(battle, action: Optional[str] = None, action_type: Optional[str] = None) -> dict:
-    my = battle.active_pokemon
+    my  = battle.active_pokemon
     opp = battle.opponent_active_pokemon
-    my_alive = sum(1 for p in battle.team.values() if not p.fainted)
+    my_alive  = sum(1 for p in battle.team.values()          if not p.fainted)
     opp_alive = sum(1 for p in battle.opponent_team.values() if not p.fainted)
 
+    # Bench = all non-active team members (including fainted, for consistent slot count)
+    bench = [
+        _encode_bench_pokemon(p)
+        for p in battle.team.values()
+        if not (my and p.species == my.species)
+    ]
+    opp_bench = [
+        _encode_bench_pokemon(p)
+        for p in battle.opponent_team.values()
+        if not (opp and p.species == opp.species)
+    ]
+
     return {
-        "battle_id": battle.battle_tag,
-        "turn": battle.turn,
-        "my_pokemon": _encode_my_pokemon(my) if my else None,
-        "opponent_pokemon": _encode_opponent(opp) if opp else None,
-        "available_moves": _encode_available_moves(battle),
+        "battle_id":          battle.battle_tag,
+        "turn":               battle.turn,
+        "my_pokemon":         _encode_my_pokemon(my)  if my  else None,
+        "opponent_pokemon":   _encode_opponent(opp)   if opp else None,
+        "bench_pokemon":      bench,       # list of up to 5 bench slot dicts
+        "opponent_bench":     opp_bench,   # list of observed opponent bench slots
+        "available_moves":    _encode_available_moves(battle),
         "available_switches": [p.species for p in battle.available_switches],
-        "action": action,
-        "action_type": action_type,
-        "weather": next(iter(battle.weather)).name if battle.weather else None,
-        "fields": [f.name for f in battle.fields],
-        "my_team_size": my_alive,
+        "action":             action,
+        "action_type":        action_type,
+        "weather":            next(iter(battle.weather)).name if battle.weather else None,
+        "fields":             [f.name for f in battle.fields],
+        "my_team_size":       my_alive,
         "opponent_team_size": opp_alive,
     }
 
