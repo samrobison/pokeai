@@ -395,6 +395,32 @@ def score_switch_in(candidate: AIPokemon, opp: AIPokemon,
 # Public API
 # ---------------------------------------------------------------------------
 
+def _guess_opponent_kit(opp_poke: AIPokemon, opp_env) -> None:
+    """
+    Fill an opponent AIPokemon with likely moves and ability from random-battle
+    data: the union of revealed moves and every move the species can carry, plus
+    its ability when randbats pins it to a single option.
+    """
+    from converters import move_from_env
+    from poke_env.battle.move import Move as EnvMove
+    from randbats import possible_moves, sole_ability
+
+    move_ids = set(opp_env.moves.keys()) | set(possible_moves(opp_env.species))
+    guessed = []
+    for mid in move_ids:
+        try:
+            guessed.append(move_from_env(EnvMove(mid, gen=9)))
+        except Exception:
+            pass
+    if guessed:
+        opp_poke.moves = guessed
+
+    if not opp_env.ability:
+        pinned = sole_ability(opp_env.species)
+        if pinned:
+            opp_poke.ability = pinned
+
+
 def choose_best_move(battle, depth: int = DEFAULT_DEPTH, consecutive_boosts: int = 0):
     """
     Run maximin search over moves AND switches.
@@ -418,6 +444,7 @@ def choose_best_move(battle, depth: int = DEFAULT_DEPTH, consecutive_boosts: int
     try:
         my_poke  = pokemon_from_env(my_env)
         opp_poke = pokemon_from_env(opp_env, use_max_stats=True)
+        _guess_opponent_kit(opp_poke, opp_env)
 
         # Replace my moves with only what's available this turn. Drop team-cure
         # moves (Heal Bell / Aromatherapy) when nobody is statused — but never
@@ -489,6 +516,7 @@ def choose_best_switch(battle) -> Optional[object]:
 
     try:
         opp_poke = pokemon_from_env(opp_env, use_max_stats=True)
+        _guess_opponent_kit(opp_poke, opp_env)
         opp_boosts = {k: v for k, v in opp_env.boosts.items()
                       if k in ('atk', 'def', 'spa', 'spd', 'spe')}
         best_env, best_score = None, float('-inf')
