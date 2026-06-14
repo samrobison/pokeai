@@ -84,12 +84,33 @@ ABILITY_TYPE_IMMUNITY = {
     'eartheater':    'Ground',
 }
 
+# Abilities that grant immunity to a class of moves identified by a move flag,
+# regardless of type (Soundproof blocks Psychic Noise, Boomburst, Hyper Voice...).
+ABILITY_FLAG_IMMUNITY = {
+    'soundproof':  'sound',
+    'bulletproof': 'bullet',
+    'overcoat':    'powder',
+    'windrider':   'wind',
+}
+
 
 def _ability_negates(defender: AIPokemon, move: AIMove) -> bool:
-    """True if the defender's ability makes it immune to this move's type."""
+    """True if the defender's ability makes it immune to this move."""
     ability = (getattr(defender, 'ability', '') or '').replace(' ', '').lower()
+    if not ability:
+        return False
+
+    # Type immunity (Levitate vs Ground, Flash Fire vs Fire, ...)
     immune_type = ABILITY_TYPE_IMMUNITY.get(ability)
-    return immune_type is not None and bool(move.type) and move.type.capitalize() == immune_type
+    if immune_type and bool(move.type) and move.type.capitalize() == immune_type:
+        return True
+
+    # Move-flag immunity (Soundproof vs sound, Bulletproof vs bullet, ...)
+    immune_flag = ABILITY_FLAG_IMMUNITY.get(ability)
+    if immune_flag and immune_flag in getattr(move, 'flags', ()):
+        return True
+
+    return False
 
 
 def _deals_fixed(move: AIMove) -> bool:

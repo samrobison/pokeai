@@ -23,6 +23,8 @@ class Move:
         self.heal = 0.0
         # Drain: fraction of damage dealt recovered as HP (Giga Drain = 0.5).
         self.drain = 0.0
+        # Move flags: 'sound', 'bullet', 'powder', etc. (for ability immunities).
+        self.flags = set()
 
     ### Methods ###
     def __init__(self, move_hash):
@@ -46,6 +48,8 @@ class Move:
                 self.heal = move_hash['heal']
             if 'drain' in move_hash:
                 self.drain = move_hash['drain']
+            if 'flags' in move_hash:
+                self.flags = move_hash['flags']
 
 class Pokemon:
 

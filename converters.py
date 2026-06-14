@@ -53,6 +53,7 @@ def move_from_env(env_move):
         'fixed_damage': env_move.damage or 0,  # 'level' or int for Seismic Toss etc.
         'heal': env_move.heal or 0.0,          # Recover/Soft-Boiled/Roost = 0.5
         'drain': env_move.drain or 0.0,        # Giga Drain = 0.5 of damage dealt
+        'flags': set(env_move.flags or ()),  # sound/bullet/powder/... (set or dict-keys)
     }
     return AIMove(move_hash)
 
