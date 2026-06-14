@@ -51,6 +51,8 @@ def move_from_env(env_move):
         'priority': env_move.priority,
         'boosts': _self_boosts(env_move),  # stat changes applied to the user
         'fixed_damage': env_move.damage or 0,  # 'level' or int for Seismic Toss etc.
+        'heal': env_move.heal or 0.0,          # Recover/Soft-Boiled/Roost = 0.5
+        'drain': env_move.drain or 0.0,        # Giga Drain = 0.5 of damage dealt
     }
     return AIMove(move_hash)
 

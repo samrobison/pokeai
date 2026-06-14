@@ -177,11 +177,16 @@ def _is_setup_move(move: AIMove) -> bool:
     return not _deals_damage(move) and _has_positive_boost(move)
 
 
+def _heals(move: AIMove) -> bool:
+    """A pure self-heal move (Recover, Soft-Boiled, Roost)."""
+    return getattr(move, 'heal', 0.0) > 0
+
+
 def _viable_moves(pokemon: AIPokemon) -> List[AIMove]:
-    """Our moves: damaging moves (incl. fixed-damage) plus moves that buff us."""
+    """Damaging moves (incl. fixed-damage), setup moves, and healing moves."""
     moves = [
         m for m in pokemon.moves
-        if m.category and (_deals_damage(m) or _has_positive_boost(m))
+        if m.category and (_deals_damage(m) or _has_positive_boost(m) or _heals(m))
     ]
     return moves if moves else (pokemon.moves or [AIMove(None)])
 
@@ -289,13 +294,20 @@ def _maximin(
             opp_atk_s, my_def_s = _boost_stages(opp_move, opp_boosts, my_boosts)
             opp_dmg = _apply_damage(opp_poke, my_poke, opp_move, opp_atk_s, my_def_s)
 
+            # HP we recover this turn: direct heal (fraction of max) or drain
+            # (fraction of damage dealt). Capped at full HP.
+            heal_amt = my_move.heal * my_max if getattr(my_move, 'heal', 0.0) else 0.0
+            if getattr(my_move, 'drain', 0.0):
+                heal_amt += my_move.drain * my_dmg
+            my_hp_after = min(my_max, my_hp + heal_amt) - opp_dmg
+
             # Our self-boosts apply from next turn onward (e.g. Draco Meteor drops
             # our SpA, so the next Draco / special move is weaker in the subtree).
             next_boosts = _apply_boosts(my_boosts, self_boosts) if self_boosts else my_boosts
 
             score, _ = _maximin(
                 my_poke, opp_poke,
-                max(0.0, my_hp  - opp_dmg),
+                max(0.0, my_hp_after),
                 max(0.0, opp_hp - my_dmg),
                 depth - 1, my_bench,
                 alpha=alpha,

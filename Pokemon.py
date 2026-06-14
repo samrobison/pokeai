@@ -19,6 +19,10 @@ class Move:
         # Fixed-damage moves: 'level' (Seismic Toss / Night Shade) or an int
         # (Sonic Boom 20, Dragon Rage 40). 0 / None means normal damage calc.
         self.fixed_damage = 0
+        # Self-heal as a fraction of max HP (Recover/Soft-Boiled/Roost = 0.5).
+        self.heal = 0.0
+        # Drain: fraction of damage dealt recovered as HP (Giga Drain = 0.5).
+        self.drain = 0.0
 
     ### Methods ###
     def __init__(self, move_hash):
@@ -38,6 +42,10 @@ class Move:
                 self.boosts = move_hash['boosts']
             if 'fixed_damage' in move_hash:
                 self.fixed_damage = move_hash['fixed_damage']
+            if 'heal' in move_hash:
+                self.heal = move_hash['heal']
+            if 'drain' in move_hash:
+                self.drain = move_hash['drain']
 
 class Pokemon:
 
