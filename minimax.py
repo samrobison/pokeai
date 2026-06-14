@@ -15,7 +15,7 @@ Force switches (after a faint) are handled separately by score_switch_in().
 from typing import List, Optional, Tuple
 
 from Pokemon import Move as AIMove, Pokemon as AIPokemon
-from libs import calcDamge, nameFormat
+from libs import calcDamge, moveEffectiveness, nameFormat
 
 DEFAULT_DEPTH = 8
 
@@ -32,6 +32,9 @@ BOOST_VALUE = 0.05
 # Once this many boosts have been chained, the search will not consider another
 # setup move and must attack or switch instead.
 MAX_CONSECUTIVE_BOOSTS = 2
+
+# Moves that only cure the team's status conditions — useless with nothing to cure.
+TEAM_CURE_MOVES = {'healbell', 'aromatherapy'}
 
 
 # ---------------------------------------------------------------------------
@@ -89,6 +92,16 @@ def _ability_negates(defender: AIPokemon, move: AIMove) -> bool:
     return immune_type is not None and bool(move.type) and move.type.capitalize() == immune_type
 
 
+def _deals_fixed(move: AIMove) -> bool:
+    """A fixed-damage move (Seismic Toss, Night Shade, Sonic Boom, Dragon Rage)."""
+    return bool(getattr(move, 'fixed_damage', 0))
+
+
+def _deals_damage(move: AIMove) -> bool:
+    """Whether a move does any damage at all (normal power or fixed)."""
+    return move.power > 0 or _deals_fixed(move)
+
+
 def _apply_damage(
     attacker: AIPokemon,
     defender: AIPokemon,
@@ -96,10 +109,19 @@ def _apply_damage(
     atk_stage: int = 0,
     def_stage: int = 0,
 ) -> float:
-    if not move.category or move.power == 0:
-        return 0.0
     if _ability_negates(defender, move):
         return 0.0  # e.g. Ground move into Levitate, Fire into Flash Fire
+
+    # Fixed-damage moves ignore stats/STAB but still respect type immunity
+    # (Seismic Toss/Fighting can't hit Ghost; Night Shade/Ghost can't hit Normal).
+    if _deals_fixed(move):
+        if moveEffectiveness(move, defender) == 0:
+            return 0.0
+        fd = move.fixed_damage
+        return float(attacker.level or 100) if fd == 'level' else float(fd)
+
+    if not move.category or move.power == 0:
+        return 0.0
     try:
         min_dmg, max_dmg, _ = calcDamge(attacker, defender, move, defender.stats['hp'])
         raw = (min_dmg + max_dmg) / 2.0
@@ -152,14 +174,14 @@ def _has_positive_boost(move: AIMove) -> bool:
 
 def _is_setup_move(move: AIMove) -> bool:
     """A pure stat-boost move: deals no damage and raises one of our stats."""
-    return move.power == 0 and _has_positive_boost(move)
+    return not _deals_damage(move) and _has_positive_boost(move)
 
 
 def _viable_moves(pokemon: AIPokemon) -> List[AIMove]:
-    """Our moves: damaging moves plus pure status moves that buff us."""
+    """Our moves: damaging moves (incl. fixed-damage) plus moves that buff us."""
     moves = [
         m for m in pokemon.moves
-        if m.category and (m.power > 0 or _has_positive_boost(m))
+        if m.category and (_deals_damage(m) or _has_positive_boost(m))
     ]
     return moves if moves else (pokemon.moves or [AIMove(None)])
 
@@ -169,7 +191,7 @@ def _opp_threat_moves(pokemon: AIPokemon) -> List[AIMove]:
     Opponent's threat moves. If we haven't seen any moves yet, substitute a
     phantom move so we don't assume they're harmless.
     """
-    moves = [m for m in pokemon.moves if m.category and m.power > 0]
+    moves = [m for m in pokemon.moves if m.category and _deals_damage(m)]
     return moves if moves else [_phantom_move(pokemon)]
 
 
@@ -233,7 +255,7 @@ def _maximin(
 
     # Sort our moves: damaging moves by expected damage first, boost moves last
     def _move_priority(m: AIMove) -> float:
-        if m.power > 0:
+        if _deals_damage(m):
             atk_s, def_s = _boost_stages(m, my_boosts, opp_boosts)
             return _apply_damage(my_poke, opp_poke, m, atk_s, def_s)
         return -1.0  # boost moves sorted after damaging moves
@@ -256,7 +278,7 @@ def _maximin(
             # Damage we deal this turn, using our CURRENT boosts (a damaging move
             # with a self-debuff still hits at full power this turn — the debuff
             # only bites on subsequent turns).
-            if my_move.power > 0:
+            if _deals_damage(my_move):
                 # Our damage uses our offensive boosts AND the opponent's defensive boosts.
                 atk_s, def_s = _boost_stages(my_move, my_boosts, opp_boosts)
                 my_dmg = _apply_damage(my_poke, opp_poke, my_move, atk_s, def_s)
@@ -385,9 +407,18 @@ def choose_best_move(battle, depth: int = DEFAULT_DEPTH, consecutive_boosts: int
         my_poke  = pokemon_from_env(my_env)
         opp_poke = pokemon_from_env(opp_env, use_max_stats=True)
 
-        # Replace my moves with only what's available this turn
+        # Replace my moves with only what's available this turn. Drop team-cure
+        # moves (Heal Bell / Aromatherapy) when nobody is statused — but never
+        # filter down to zero moves.
+        team_has_status = any(p.status for p in battle.team.values())
+        usable_moves = battle.available_moves
+        if not team_has_status:
+            filtered = [m for m in usable_moves if m.id not in TEAM_CURE_MOVES]
+            if filtered:
+                usable_moves = filtered
+
         ai_moves_by_id: dict = {}
-        for env_move in battle.available_moves:
+        for env_move in usable_moves:
             ai_move = move_from_env(env_move)
             ai_moves_by_id[nameFormat(env_move.id)] = (env_move, ai_move)
         my_poke.moves = [ai for _, ai in ai_moves_by_id.values()]

@@ -16,6 +16,9 @@ class Move:
         self.boosts = []
         self.recharge = False
         self.stalling_move = False
+        # Fixed-damage moves: 'level' (Seismic Toss / Night Shade) or an int
+        # (Sonic Boom 20, Dragon Rage 40). 0 / None means normal damage calc.
+        self.fixed_damage = 0
 
     ### Methods ###
     def __init__(self, move_hash):
@@ -33,6 +36,8 @@ class Move:
             self.priority = move_hash['priority']
             if 'boosts' in move_hash:
                 self.boosts = move_hash['boosts']
+            if 'fixed_damage' in move_hash:
+                self.fixed_damage = move_hash['fixed_damage']
 
 class Pokemon:
 

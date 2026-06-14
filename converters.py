@@ -50,6 +50,7 @@ def move_from_env(env_move):
         'pp': env_move.max_pp,
         'priority': env_move.priority,
         'boosts': _self_boosts(env_move),  # stat changes applied to the user
+        'fixed_damage': env_move.damage or 0,  # 'level' or int for Seismic Toss etc.
     }
     return AIMove(move_hash)
 
