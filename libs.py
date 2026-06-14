@@ -21,10 +21,13 @@ def calcDamge(poke1, poke2, move, currentHP):
 
     #find damage before min max multiplier
     damage = 0
+    # Canonical Gen 5+ formula: floor( floor(42 * Power * A/D / 50) + 2 ) * mods.
+    # A/D is a real ratio here; flooring it (the old bug) zeroed out damage
+    # whenever the attacking stat was below the defending stat.
     if move.category == 'Physical':
-        damage = int( ( int( (42 * move.power * int(poke1.stats['atk'] / poke2.stats['defe'])) / 50) + 2) * stab * effective)
+        damage = int( ( int( (42 * move.power * (poke1.stats['atk'] / poke2.stats['defe'])) / 50) + 2) * stab * effective)
     elif move.category == 'special':
-        damage = int( ( int( (42 * move.power * int(poke1.stats['spa'] / poke2.stats['spd'])) / 50) + 2) * stab * effective)
+        damage = int( ( int( (42 * move.power * (poke1.stats['spa'] / poke2.stats['spd'])) / 50) + 2) * stab * effective)
     minDamage = int(damage * MIN_MULT)
     maxDamage = int(damage * MAX_MULT)
 
