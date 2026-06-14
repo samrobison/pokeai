@@ -74,7 +74,13 @@ def pokemon_from_env(env_pokemon, use_max_stats=False):
     p.level = env_pokemon.level or 100
     p.data = base_stats
     p.type = (t1, t2)
-    p.ability = env_pokemon.ability or ''
+    # Best-known ability: the revealed one, or the only possibility if unambiguous.
+    ability = env_pokemon.ability
+    if not ability:
+        possible = env_pokemon.possible_abilities or []
+        if len(possible) == 1:
+            ability = possible[0]
+    p.ability = (ability or '').replace(' ', '').lower()
     p.item = env_pokemon.item or ''
     p.friendly = True
     p.otherFormes = []

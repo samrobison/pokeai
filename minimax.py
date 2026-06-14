@@ -65,6 +65,30 @@ def _stage_mult(stage: int) -> float:
     return max(2, 2 + stage) / max(2, 2 - stage)
 
 
+# Abilities that grant full immunity to an entire move type. Keys are normalized
+# ability ids (lowercase, no spaces); values are the immune move type.
+ABILITY_TYPE_IMMUNITY = {
+    'levitate':      'Ground',
+    'flashfire':     'Fire',
+    'wellbakedbody': 'Fire',
+    'waterabsorb':   'Water',
+    'stormdrain':    'Water',
+    'dryskin':       'Water',
+    'voltabsorb':    'Electric',
+    'lightningrod':  'Electric',
+    'motordrive':    'Electric',
+    'sapsipper':     'Grass',
+    'eartheater':    'Ground',
+}
+
+
+def _ability_negates(defender: AIPokemon, move: AIMove) -> bool:
+    """True if the defender's ability makes it immune to this move's type."""
+    ability = (getattr(defender, 'ability', '') or '').replace(' ', '').lower()
+    immune_type = ABILITY_TYPE_IMMUNITY.get(ability)
+    return immune_type is not None and bool(move.type) and move.type.capitalize() == immune_type
+
+
 def _apply_damage(
     attacker: AIPokemon,
     defender: AIPokemon,
@@ -74,6 +98,8 @@ def _apply_damage(
 ) -> float:
     if not move.category or move.power == 0:
         return 0.0
+    if _ability_negates(defender, move):
+        return 0.0  # e.g. Ground move into Levitate, Fire into Flash Fire
     try:
         min_dmg, max_dmg, _ = calcDamge(attacker, defender, move, defender.stats['hp'])
         raw = (min_dmg + max_dmg) / 2.0
