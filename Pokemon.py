@@ -25,6 +25,15 @@ class Move:
         self.drain = 0.0
         # Move flags: 'sound', 'bullet', 'powder', etc. (for ability immunities).
         self.flags = set()
+        # Move priority bracket (Quick Attack = +1, etc.). Default 0 so synthetic
+        # / null moves are safe to read in turn-order calculations.
+        self.priority = 0
+        # Status this move inflicts on its TARGET: 'slp'/'brn'/'par'/'psn'/'tox'/'frz'.
+        self.status_inflicts = None
+        # Volatile applied to the target (only 'yawn' is modeled for now).
+        self.volatile = None
+        # Entry hazard this move sets on the target's side: 'sr'/'spikes'/'tspikes'.
+        self.hazard = None
 
     ### Methods ###
     def __init__(self, move_hash):
@@ -50,6 +59,12 @@ class Move:
                 self.drain = move_hash['drain']
             if 'flags' in move_hash:
                 self.flags = move_hash['flags']
+            if 'status_inflicts' in move_hash:
+                self.status_inflicts = move_hash['status_inflicts']
+            if 'volatile' in move_hash:
+                self.volatile = move_hash['volatile']
+            if 'hazard' in move_hash:
+                self.hazard = move_hash['hazard']
 
 class Pokemon:
 

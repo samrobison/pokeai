@@ -1,21 +1,18 @@
 """
 Offline DQN training from battles.jsonl.
 
-Two-phase training:
-  Phase 1 — Supervised warm-start (behavioral cloning from minimax)
-    Loss: cross-entropy(softmax(Q_values[valid]), one_hot(minimax_action))
-    This gives the network a strong prior before RL kicks in.
-
-  Phase 2 — Offline Q-learning (Double DQN)
-    Build (s, a, r, s′, done) transitions from logged episodes.
-    Reward: HP-delta per turn + ±1.0 terminal win/loss bonus.
-    Loss: smooth-L1 Bellman error with action masking.
+Outcome-driven Q-learning (Double DQN):
+  Build (s, a, r, s′, done) transitions from logged episodes.
+  Reward: HP-delta per turn + ±1.0 terminal win/loss bonus, so the network
+  learns the actions that lead to WINNING games rather than imitating the
+  policy that generated the data (minimax). Losing games still contribute as
+  negative signal through their −1.0 terminal reward.
+  Loss: smooth-L1 Bellman error with action masking.
 
 Usage:
     python train_offline.py                        # defaults
     python train_offline.py --log battles.jsonl --out model.pt
-    python train_offline.py --sup_epochs 0        # skip supervised phase
-    python train_offline.py --ql_epochs 0         # skip Q-learning phase
+    python train_offline.py --ql_epochs 40         # train longer
 """
 
 from __future__ import annotations
@@ -79,8 +76,23 @@ def load_episodes(path: str) -> list[list[dict]]:
 
 
 def infer_outcome(episode: list[dict]) -> str:
-    """Guess win/loss from the final turn's team sizes."""
-    last = episode[-1]
+    """
+    Win/loss for an episode. Prefer the explicit outcome record (logged at
+    battle end); fall back to guessing from the final turn's team sizes for
+    older data that predates outcome logging.
+    """
+    for rec in episode:
+        if rec.get("type") == "outcome":
+            if rec.get("won") is True:
+                return "won"
+            if rec.get("won") is False:
+                return "lost"
+            return "unknown"  # tie / None
+
+    turns = [r for r in episode if r.get("type") != "outcome"]
+    if not turns:
+        return "unknown"
+    last = turns[-1]
     if last.get("opponent_team_size", 1) == 0:
         return "won"
     if last.get("my_team_size", 1) == 0:
@@ -113,7 +125,10 @@ def build_transitions(episodes: list[list[dict]]) -> list[tuple]:
         outcome    = infer_outcome(episode)
         terminal_r = 1.0 if outcome == "won" else (-1.0 if outcome == "lost" else 0.0)
 
-        for i, rec in enumerate(episode):
+        # Only learn from real turn records (drop the terminal outcome record).
+        turns = [r for r in episode if r.get("type") != "outcome"]
+
+        for i, rec in enumerate(turns):
             a_idx = state_action_idx(rec)
             if a_idx is None:
                 skipped += 1
@@ -122,10 +137,10 @@ def build_transitions(episodes: list[list[dict]]) -> list[tuple]:
             s    = encode_state(rec)
             mask = encode_action_mask(rec)
 
-            if i + 1 < len(episode):
-                r      = turn_reward(rec, episode[i + 1])
-                s_next = encode_state(episode[i + 1])
-                nm     = encode_action_mask(episode[i + 1])
+            if i + 1 < len(turns):
+                r      = turn_reward(rec, turns[i + 1])
+                s_next = encode_state(turns[i + 1])
+                nm     = encode_action_mask(turns[i + 1])
                 done   = False
             else:
                 r      = terminal_r
@@ -140,45 +155,7 @@ def build_transitions(episodes: list[list[dict]]) -> list[tuple]:
     return transitions
 
 
-# ── Phase 1: supervised warm-start ───────────────────────────────────────────
-
-def supervised_epoch(
-    model:       DuelingDQN,
-    optimizer:   torch.optim.Optimizer,
-    transitions: list[tuple],
-    batch_size:  int = BATCH_SIZE,
-) -> float:
-    """
-    One full pass of cross-entropy loss over all transitions.
-    Treats Q-values as logits for a classification over valid actions.
-    """
-    model.train()
-    indices    = np.random.permutation(len(transitions))
-    total_loss = 0.0
-    n_batches  = 0
-
-    for start in range(0, len(indices), batch_size):
-        batch   = [transitions[int(i)] for i in indices[start: start + batch_size]]
-        states  = torch.FloatTensor(np.stack([b[0] for b in batch])).to(DEVICE)
-        actions = torch.LongTensor( np.array( [b[1] for b in batch])).to(DEVICE)
-        masks   = torch.BoolTensor( np.stack( [b[5] for b in batch])).to(DEVICE)
-
-        q        = model(states)
-        q_masked = q.masked_fill(~masks, -1e9)
-        loss     = F.cross_entropy(q_masked, actions)
-
-        optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
-        optimizer.step()
-
-        total_loss += loss.item()
-        n_batches  += 1
-
-    return total_loss / max(n_batches, 1)
-
-
-# ── Phase 2: offline Double DQN ───────────────────────────────────────────────
+# ── Offline Double DQN ────────────────────────────────────────────────────────
 
 def ql_step(
     model:     DuelingDQN,
@@ -231,7 +208,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Offline DQN training for Pokemon battles")
     parser.add_argument("--log",        default="battles.jsonl", help="JSONL game log")
     parser.add_argument("--out",        default="model.pt",      help="Output model path")
-    parser.add_argument("--sup_epochs", type=int, default=30,    help="Supervised warm-start epochs")
     parser.add_argument("--ql_epochs",  type=int, default=20,    help="Q-learning epochs over dataset")
     args = parser.parse_args()
 
@@ -262,19 +238,9 @@ def main() -> None:
     target.eval()
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
-    # ── Phase 1: Supervised warm-start ───────────────────────────────────────
-    if args.sup_epochs > 0:
-        print(f"\n── Phase 1: Supervised warm-start ({args.sup_epochs} epochs) ──────────────────")
-        for epoch in range(1, args.sup_epochs + 1):
-            loss = supervised_epoch(model, optimizer, transitions)
-            if epoch == 1 or epoch % 5 == 0:
-                print(f"  Epoch {epoch:3d}/{args.sup_epochs}  CE-loss = {loss:.4f}")
-        # Sync target after supervised phase
-        target.load_state_dict(model.state_dict())
-
-    # ── Phase 2: Offline Q-learning ───────────────────────────────────────────
+    # ── Offline Q-learning (outcome-driven; no minimax imitation) ─────────────
     if args.ql_epochs > 0:
-        print(f"\n── Phase 2: Offline Q-learning ({args.ql_epochs} passes over dataset) ─────────")
+        print(f"\n── Offline Q-learning ({args.ql_epochs} passes over dataset) ─────────")
         buf = ReplayBuffer(capacity=max(len(transitions) * 2, 10_000))
         for t in transitions:
             buf.push(*t)

@@ -33,7 +33,7 @@ from poke_env.player import Player
 
 from database import initDb
 from dqn_model import DuelingDQN
-from game_logger import LOG_PATH, build_state, log_state
+from game_logger import LOG_PATH, build_state, buffer_state, flush_battle
 from minimax import choose_best_move, choose_best_switch
 from state_encoder import ACTION_DIM, STATE_DIM, encode_action_mask, encode_state
 
@@ -192,15 +192,21 @@ class DQNPlayer(Player):
             elif isinstance(order.order, EnvPokemon):
                 action, action_type = order.order.species, "switch"
 
-        log_state(build_state(battle, action=action, action_type=action_type))
+        buffer_state(build_state(battle, action=action, action_type=action_type))
         return order
+
+    def _battle_finished_callback(self, battle):
+        flush_battle(battle)
+        result = "won" if battle.won else ("lost" if battle.won is False else "tie")
+        print(f"Battle finished: {battle.battle_tag} -> {result}")
+        super()._battle_finished_callback(battle)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 async def main() -> None:
     import argparse
-    from userinfo import username, password
+    from userinfo import dqn_username as username, dqn_password as password
 
     parser = argparse.ArgumentParser(description="Play Pokemon Showdown with DQN")
     parser.add_argument("n",         nargs="?", type=int, default=1,

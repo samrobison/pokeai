@@ -39,6 +39,37 @@ def _self_boosts(env_move) -> dict:
     return boosts
 
 
+# poke-env SideCondition name -> our short hazard key.
+_HAZARD_MAP = {
+    'STEALTH_ROCK': 'sr',
+    'SPIKES': 'spikes',
+    'TOXIC_SPIKES': 'tspikes',
+}
+
+
+def _status_inflicts(env_move):
+    """Primary status this move lands on its target (Spore->slp, Toxic->tox, ...)."""
+    status = env_move.status
+    return status.name.lower() if status else None
+
+
+def _volatile(env_move):
+    """Volatile applied to the target; only 'yawn' is acted on by the search."""
+    vol = env_move.volatile_status
+    if not vol:
+        return None
+    return vol.name.lower() if hasattr(vol, 'name') else str(vol).lower()
+
+
+def _hazard(env_move):
+    """Entry hazard this move sets on the target's side, or None."""
+    sc = env_move.side_condition
+    if not sc:
+        return None
+    name = sc.name if hasattr(sc, 'name') else str(sc)
+    return _HAZARD_MAP.get(name)
+
+
 def move_from_env(env_move):
     accuracy = int(env_move.accuracy * 100)
     move_hash = {
@@ -54,6 +85,9 @@ def move_from_env(env_move):
         'heal': env_move.heal or 0.0,          # Recover/Soft-Boiled/Roost = 0.5
         'drain': env_move.drain or 0.0,        # Giga Drain = 0.5 of damage dealt
         'flags': set(env_move.flags or ()),  # sound/bullet/powder/... (set or dict-keys)
+        'status_inflicts': _status_inflicts(env_move),  # slp/brn/par/psn/tox/frz on target
+        'volatile': _volatile(env_move),                # 'yawn' (delayed sleep)
+        'hazard': _hazard(env_move),                    # 'sr'/'spikes'/'tspikes'
     }
     return AIMove(move_hash)
 

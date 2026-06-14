@@ -43,6 +43,10 @@ def calcDamge(poke1, poke2, move, currentHP):
 #def accuracy(stuff):
 
 def moveEffectiveness(move, pokemon ):
+    # Single-typed pokemon store their type duplicated as (t, t); multiplying
+    # both slots would square the multiplier, so apply it once in that case.
+    if pokemon.type[0] == pokemon.type[1]:
+        return TypeChart[move.type][pokemon.type[0]]
     return TypeChart[move.type][pokemon.type[0]] * TypeChart[move.type][pokemon.type[1]]
 
 def damageStatus(myStatus, theirStatus, mySeed, theirSeed):

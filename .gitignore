@@ -6,3 +6,9 @@ battles.jsonl
 model.pt
 *.pt
 __pycache__/
+
+# Run artifacts / data snapshots
+*_run.log
+collect.log
+battles.jsonl.bak
+battles_train_snapshot.jsonl

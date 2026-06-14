@@ -153,7 +153,43 @@ def build_state(battle, action: Optional[str] = None, action_type: Optional[str]
     }
 
 
-def log_state(state: dict) -> None:
+# Per-battle turn buffers, keyed by battle_tag. Turns accumulate here in memory
+# and are written to disk only when the battle finishes (see flush_battle), so a
+# game that drops mid-battle never leaves unlabeled turn data on disk.
+_pending: dict = {}
+
+
+def buffer_state(state: dict) -> None:
+    """Hold one turn's state in memory until its battle completes."""
+    _pending.setdefault(state["battle_id"], []).append(state)
+
+
+def flush_battle(battle) -> None:
+    """
+    Write a finished battle's buffered turns plus its terminal outcome record in
+    one append, then drop the buffer. Because turns are written together with the
+    outcome (type="outcome", carrying win/loss), every battle on disk is labeled.
+
+    A battle that never finishes (e.g. a dropped connection) is simply never
+    flushed — its buffered turns are discarded rather than written unlabeled.
+    """
+    battle_id = battle.battle_tag
+    turns = _pending.pop(battle_id, [])
+
+    outcome = {
+        "battle_id": battle_id,
+        "type": "outcome",
+        "won": battle.won,          # True / False / None (tie or unknown)
+        "turn": battle.turn,
+    }
+
     # TODO: swap LOG_PATH for a DB write, remote store, replay buffer, etc.
     with open(LOG_PATH, "a") as f:
-        f.write(json.dumps(state) + "\n")
+        for state in turns:
+            f.write(json.dumps(state) + "\n")
+        f.write(json.dumps(outcome) + "\n")
+
+
+def discard_battle(battle_id: str) -> None:
+    """Drop a battle's buffered turns without writing them (e.g. on shutdown)."""
+    _pending.pop(battle_id, None)
